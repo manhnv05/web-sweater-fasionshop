@@ -2,6 +2,8 @@ package com.example.datn.service;
 
 import com.example.datn.dto.MauSacDTO;
 import com.example.datn.entity.MauSac;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.MauSacRepository;
 import com.example.datn.vo.mauSacVO.MauSacQueryVO;
 import com.example.datn.vo.mauSacVO.MauSacUpdateVO;
@@ -23,6 +25,9 @@ public class MauSacService {
 
     public Integer save(MauSacVO vO) {
         MauSac bean = new MauSac();
+        if (mauSacRepository.existsMauSacByTenMauSac(vO.getTenMauSac())){
+            throw  new AppException(ErrorCode.THE_COLOR_ALREADY_EXISTS);
+        }
         BeanUtils.copyProperties(vO, bean);
         bean = mauSacRepository.save(bean);
         return bean.getId();

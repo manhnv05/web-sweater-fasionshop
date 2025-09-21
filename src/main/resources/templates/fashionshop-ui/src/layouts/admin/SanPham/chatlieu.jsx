@@ -138,10 +138,23 @@ function MaterialTable() {
             }),
             credentials: "include",
         })
-            .then((response) => {
-                if (!response.ok) throw new Error("Lỗi khi thêm chất liệu");
-                return response.text();
-            })
+            .then(async (response) => {
+            let responseBody;
+
+            try {
+                responseBody = await response.json(); // 👈 đọc body dù là lỗi
+            } catch (err) {
+                throw new Error("Không đọc được phản hồi từ server");
+            }
+
+            if (!response.ok) {
+               let message =
+            responseBody?.errors?.tenChatLieu || responseBody?.message || "Lỗi không xác định";
+                throw new Error(message);
+            }
+
+            return responseBody;
+        })
             .then(() => {
                 setShowModal(false);
                 setNewMaterial({ maChatLieu: "", tenChatLieu: "", trangThai: 1 });

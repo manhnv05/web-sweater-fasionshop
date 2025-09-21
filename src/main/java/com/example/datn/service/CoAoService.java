@@ -2,6 +2,8 @@ package com.example.datn.service;
 
 import com.example.datn.dto.CoAoDTO;
 import com.example.datn.entity.CoAo;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.CoAoRepository;
 import com.example.datn.vo.coAoVO.CoAoQueryVO;
 import com.example.datn.vo.coAoVO.CoAoUpdateVO;
@@ -23,6 +25,9 @@ public class CoAoService {
 
     public Integer save(CoAoVO vO) {
         CoAo bean = new CoAo();
+        if (coAoRepository.existsByTenCoAo(vO.getTenCoAo())){
+            throw  new AppException(ErrorCode.CO_AO_ALREADY_EXISTS);
+        }
         BeanUtils.copyProperties(vO, bean);
         bean = coAoRepository.save(bean);
         return bean.getId();

@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CoAoRepository extends JpaRepository<CoAo, Integer>, JpaSpecificationExecutor<CoAo> {
-
+    public boolean existsByTenCoAo(String tenCoAo);
 }

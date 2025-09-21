@@ -2,6 +2,8 @@ package com.example.datn.service;
 
 import com.example.datn.dto.TayAoDTO;
 import com.example.datn.entity.TayAo;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.TayAoRepository;
 import com.example.datn.vo.tayAoVO.TayAoQueryVO;
 import com.example.datn.vo.tayAoVO.TayAoUpdateVO;
@@ -23,6 +25,9 @@ public class TayAoService {
 
     public Integer save(TayAoVO vO) {
         TayAo bean = new TayAo();
+        if (tayAoRepository.existsTayAoByTenTayAo(vO.getTenTayAo())){
+            throw new AppException(ErrorCode.TAY_AO_ALREADY_EXISTS);
+        }
         BeanUtils.copyProperties(vO, bean);
         bean = tayAoRepository.save(bean);
         return bean.getId();

@@ -882,6 +882,8 @@ public class HoaDonServiceImpl implements HoaDonService {
                 // Tính thành tiền
                 int thanhTien = sanPhamMoi.getDonGia() * sanPhamMoi.getSoLuong();
                 chiTietMoi.setThanhTien(thanhTien);
+
+                //Giảm số lượng trong kho
                 giamSoLuongSanPhamChiTiet(spct.getId(), sanPhamMoi.getSoLuong());
                 hoaDon.getHoaDonChiTietList().add(chiTietMoi);
             }
@@ -1020,6 +1022,7 @@ public class HoaDonServiceImpl implements HoaDonService {
                 // Tính thành tiền
                 int thanhTien = sanPhamMoi.getDonGia() * sanPhamMoi.getSoLuong();
                 chiTietMoi.setThanhTien(thanhTien);
+                //trừ số lượng trong kho
                 giamSoLuongSanPhamChiTiet(spct.getId(), sanPhamMoi.getSoLuong());
                 hoaDon.getHoaDonChiTietList().add(chiTietMoi);
             }

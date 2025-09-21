@@ -241,7 +241,7 @@ export default function OutletSalePage() {
                                             <Box
                                                
                                             />
-                                             <ProductSlideshow product={{ listUrlImage: item.imageUrl }} sx={{
+                                             <ProductSlideshow product={{ listUrlImage: item.img }} sx={{
                                                 width: "100%",
                                                 height: "100%",
                                               }} />
