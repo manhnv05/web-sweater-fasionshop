@@ -27,7 +27,7 @@ import { useAuth } from "../../BanHangTaiQuay/AuthProvider.jsx";
 import { toast } from "react-toastify";
 import InHoaDon from "../InHoaDon/InHoaDon.jsx";
 import PropTypes from "prop-types";
-import ConfirmationDialog from "../OrderDetail/ConfirmationDialog"
+import ConfirmationDialog from "../OrderDetail/ConfirmationDialog";
 const statusMap = {
   HOAN_THANH: "Hoàn thành",
   CHO_XAC_NHAN: "Chờ xác nhận",
@@ -70,26 +70,26 @@ const OrderDetailPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const currentInvoiceId = orderId;
   const [isCancelModalOpen, setCancelModalOpen] = useState(false);
-
-const [confirmation, setConfirmation] = useState({
+  const [isPaid, setIsPaid] = useState(false);
+  const [confirmation, setConfirmation] = useState({
     isOpen: false,
     title: "",
     message: "",
     onConfirm: () => {},
     isLoading: false,
-});
-const confirmStatus = () => {
+  });
+  const confirmStatus = () => {
     setConfirmation({
-        isOpen: true,
-        title: "Xác nhận chuyển trạng thái",
-        message: "Bạn có chắc chắn muốn chuyển đơn hàng sang trạng thái tiếp theo không?",
-        onConfirm: executeStatusChange, // Gán hành động sẽ thực thi
-        isLoading: false,
+      isOpen: true,
+      title: "Xác nhận chuyển trạng thái",
+      message: "Bạn có chắc chắn muốn chuyển đơn hàng sang trạng thái tiếp theo không?",
+      onConfirm: executeStatusChange, // Gán hành động sẽ thực thi
+      isLoading: false,
     });
-};
-const handleCloseConfirmation = () => {
+  };
+  const handleCloseConfirmation = () => {
     setConfirmation((prev) => ({ ...prev, isOpen: false }));
-};
+  };
 
   const handleOpenCancelModal = () => {
     setCancelModalOpen(true);
@@ -205,7 +205,7 @@ const handleCloseConfirmation = () => {
     }
   };
 
- const executeStatusChange = async () => {
+  const executeStatusChange = async () => {
     // Bật trạng thái loading trên hộp thoại xác nhận
     setConfirmation((prev) => ({ ...prev, isLoading: true }));
     setActionLoading(true);
@@ -228,23 +228,23 @@ const handleCloseConfirmation = () => {
         }
         if (totalPaid < orderData.totalAmount) {
           toast.error("Đơn hàng chưa được thanh toán đủ. Không thể hoàn thành.");
-          
+
           // Đóng dialog và dừng thực thi
-          handleCloseConfirmation(); 
+          handleCloseConfirmation();
           setActionLoading(false);
           return;
         }
       } catch (err) {
         toast.error(err.message || "Không thể xác thực trạng thái thanh toán.");
-        
+
         // Đóng dialog và dừng thực thi
-        handleCloseConfirmation(); 
+        handleCloseConfirmation();
         setActionLoading(false);
         return;
       }
     }
     const originalStatus = orderData?.trangThaiGoc;
-    
+
     try {
       const payload = {
         ghiChu: "Chuyển trạng thái tự động",
@@ -276,23 +276,40 @@ const handleCloseConfirmation = () => {
     } finally {
       setActionLoading(false);
       // Đóng hộp thoại xác nhận sau khi hoàn tất
-      handleCloseConfirmation(); 
+      handleCloseConfirmation();
     }
     // --- Kết thúc logic gốc ---
-};
+  };
 
-// 2. HÀM MỚI ĐỂ MỞ HỘP THOẠI XÁC NHẬN
-// Hàm này sẽ được gọi khi nhấn nút "Xác nhận (Trạng thái tiếp theo)".
-const handleConfirmStatus = () => {
+  // 2. HÀM MỚI ĐỂ MỞ HỘP THOẠI XÁC NHẬN
+  // Hàm này sẽ được gọi khi nhấn nút "Xác nhận (Trạng thái tiếp theo)".
+  const handleConfirmStatus = () => {
     setConfirmation({
-        isOpen: true,
-        title: "Xác nhận chuyển trạng thái",
-        message: "Bạn có chắc chắn muốn chuyển đơn hàng sang trạng thái tiếp theo không?",
-        onConfirm: executeStatusChange, // Gán hành động sẽ thực thi khi nhấn "Có"
-        isLoading: false,
+      isOpen: true,
+      title: "Xác nhận chuyển trạng thái",
+      message: "Bạn có chắc chắn muốn chuyển đơn hàng sang trạng thái tiếp theo không?",
+      onConfirm: executeStatusChange, // Gán hành động sẽ thực thi khi nhấn "Có"
+      isLoading: false,
     });
-};
-
+  };
+  const checkPaymentStatus = useCallback(async (id) => {
+    if (!id) {
+      setIsPaid(false); // Reset trạng thái nếu không có orderId
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `${BASE_SERVER_URL}chiTietThanhToan/lich-su-thanh-toan/${id}`,
+        { withCredentials: true }
+      );
+      const paymentHistory = response.data?.data || [];
+      setIsPaid(paymentHistory.length > 0); // Set true nếu có lịch sử, ngược lại false
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra lịch sử thanh toán:", error);
+      // Mặc định là chưa thanh toán nếu có lỗi
+      setIsPaid(false);
+    }
+  }, []);
   // Derived state
   const isConfirmButtonDisabled =
     orderData && (orderData.status === "Hoàn thành" || orderData.status === "Đã hủy");
@@ -308,7 +325,7 @@ const handleConfirmStatus = () => {
         tenNguoiNhan: orderData.receiverName,
         soDienThoai: orderData.phoneNumber,
         diaChi: orderData.diaChi,
-          phiVanChuyen: orderData.shippingFee,
+        phiVanChuyen: orderData.shippingFee,
       }
     : {};
 
@@ -420,7 +437,7 @@ const handleConfirmStatus = () => {
                     )}
                   </SoftButton>
                 )}
-                {!isCancelButtonDisabled && orderData?.type !== "Tại quầy" && (
+                {!isCancelButtonDisabled && orderData?.type !== "Tại quầy" && isPaid && (
                   <SoftButton
                     onClick={handleOpenCancelModal}
                     disabled={isCancelButtonDisabled || actionLoading}
@@ -478,7 +495,6 @@ const handleConfirmStatus = () => {
                     },
                   }}
                   onClick={handleOpenModal}
-                  disabled={!canUpdateInfo}
                 >
                   In hóa đơn
                 </SoftButton>
@@ -496,7 +512,7 @@ const handleConfirmStatus = () => {
               </SoftTypography>
 
               <OrderInfo order={orderData} />
-              {!isCancelButtonDisabled && orderData?.type !== "Tại quầy" && (
+              {!isCancelButtonDisabled && orderData?.type !== "Tại quầy" && !isPaid && (
                 <SoftBox display="flex" justifyContent="flex-end" mt={3}>
                   <SoftButton
                     variant="outlined"
@@ -575,14 +591,14 @@ const handleConfirmStatus = () => {
           onConfirmCancel={handleConfirmCancellation}
           isLoading={isCancelling}
         />
-<ConfirmationDialog
-    open={confirmation.isOpen}
-    onClose={handleCloseConfirmation}
-    onConfirm={confirmation.onConfirm}
-    title={confirmation.title}
-    message={confirmation.message}
-    isLoading={confirmation.isLoading}
-/>
+        <ConfirmationDialog
+          open={confirmation.isOpen}
+          onClose={handleCloseConfirmation}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          isLoading={confirmation.isLoading}
+        />
         {showUpdateModal && orderData && (
           <UpdateOrderInfo
             show={showUpdateModal}
@@ -590,7 +606,7 @@ const handleConfirmStatus = () => {
             orderId={orderData.id}
             initialData={initialUpdateData}
             onUpdateSuccess={fetchOrderDetail}
-              currentUser={user?.tenNhanVien || "Không xác định"}
+            currentUser={user?.tenNhanVien || "Không xác định"}
           />
         )}
 

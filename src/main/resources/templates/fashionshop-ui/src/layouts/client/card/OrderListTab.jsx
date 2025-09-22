@@ -70,6 +70,7 @@ export default function OrderListTab({ user }) {
   const displayedOrders = allOrders.slice((page - 1) * ORDERS_PER_PAGE, page * ORDERS_PER_PAGE);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState(null);
+  const [isPaid, setIsPaid] = useState(false);
   const handleOpenCancelModal = (order) => {
     setOrderToCancel(order);
     setCancelModalOpen(true);
@@ -79,6 +80,25 @@ export default function OrderListTab({ user }) {
     setCancelModalOpen(false);
     setOrderToCancel(null);
   };
+
+  const checkPaymentStatus = useCallback(async (id) => {
+      if (!id) {
+        setIsPaid(false); // Reset trạng thái nếu không có orderId
+        return;
+      }
+      try {
+        const response = await axios.get(
+          `${BASE_SERVER_URL}chiTietThanhToan/lich-su-thanh-toan/${id}`,
+          { withCredentials: true }
+        );
+        const paymentHistory = response.data?.data || [];
+        setIsPaid(paymentHistory.length > 0); // Set true nếu có lịch sử, ngược lại false
+      } catch (error) {
+        console.error("Lỗi khi kiểm tra lịch sử thanh toán:", error);
+        // Mặc định là chưa thanh toán nếu có lỗi
+        setIsPaid(false);
+      }
+    }, []);
   const handleConfirmCancel = async () => {
     if (!orderToCancel) return;
 
@@ -353,7 +373,7 @@ export default function OrderListTab({ user }) {
                 >
                   Xem chi tiết
                 </Button>
-                {order.trangThai === "CHO_XAC_NHAN" && (
+                {order.trangThai === "CHO_XAC_NHAN" && !isPaid &&(
                   <Button
                     variant="outlined"
                     size="medium"

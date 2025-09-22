@@ -14,7 +14,7 @@ const calculateActualDiscount = (coupon, subtotal) => {
   if (!coupon || subtotal <= 0) return 0;
   let discount = 0;
   // Giảm theo %
-  if (coupon.loaiPhieu === 0 || (coupon.phamTramGiamGia && coupon.phamTramGiamGia > 0)) {
+  if ( (coupon.phamTramGiamGia && coupon.phamTramGiamGia > 0)) {
     discount = subtotal * (coupon.phamTramGiamGia / 100);
     if (coupon.giamToiDa > 0) {
       discount = Math.min(discount, coupon.giamToiDa);
@@ -32,11 +32,11 @@ const formatVoucherDetails = (voucher) => {
     let details = [];
   
     // Theo ý bạn: loaiPhieu === 0 là giảm thẳng tiền
-    if (voucher.loaiPhieu === 0 && voucher.soTienGiam > 0) {
+    if ( voucher.soTienGiam > 0) {
       details.push(`Giảm ${formatCurrency(voucher.soTienGiam)}`);
     } 
     // Theo ý bạn: loaiPhieu === 1 là giảm theo %
-    else if (voucher.loaiPhieu === 1 && voucher.phamTramGiamGia > 0) {
+    else if ( voucher.phamTramGiamGia > 0) {
       details.push(`Giảm ${voucher.phamTramGiamGia}%`);
       if (voucher.giamToiDa > 0) {
         details.push(`tối đa ${formatCurrency(voucher.giamToiDa)}`);
