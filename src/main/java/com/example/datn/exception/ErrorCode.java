@@ -56,6 +56,7 @@ public enum ErrorCode {
     THE_SIZE_ALREADY_EXISTS(1021, "Kích thước đã tồn tại", HttpStatus.BAD_REQUEST),
     THE_COLOR_ALREADY_EXISTS(1022, "Màu sắc đã tồn tại", HttpStatus.BAD_REQUEST),
     TAY_AO_ALREADY_EXISTS(1023, "Tay áo đã tồn tại", HttpStatus.BAD_REQUEST),
+    PHIEU_GIAM_GIA_EXISTS(400,"Tên phiếu giảm giá đã tồn tại", HttpStatus.BAD_REQUEST),
     CO_AO_ALREADY_EXISTS(1023, "Cổ áo đã tồn tại", HttpStatus.BAD_REQUEST);
 
 
