@@ -392,7 +392,7 @@ export default function OrderForm() {
     let calculatedDiscount = 0;
 
     // THEO ĐÚNG QUY ƯỚC: loaiPhieu 1 = Giảm %, loaiPhieu 0 = Giảm tiền
-    if (selectedVoucher.loaiPhieu === 1 && selectedVoucher.phamTramGiamGia > 0) {
+    if ( selectedVoucher.phamTramGiamGia > 0) {
       // Trường hợp giảm theo %
       calculatedDiscount = itemSubtotal * (selectedVoucher.phamTramGiamGia / 100);
 
@@ -401,7 +401,7 @@ export default function OrderForm() {
         calculatedDiscount = Math.min(calculatedDiscount, selectedVoucher.giamToiDa);
       }
 
-    } else if (selectedVoucher.loaiPhieu === 0 && selectedVoucher.soTienGiam > 0) {
+    } else if ( selectedVoucher.soTienGiam > 0) {
       // Trường hợp giảm thẳng tiền
       calculatedDiscount = selectedVoucher.soTienGiam;
     }

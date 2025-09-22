@@ -280,14 +280,14 @@ function MaterialTable() {
                     >
                         <FaEdit />
                     </IconButton>
-                    <IconButton
+                    {/* <IconButton
                         size="small"
                         sx={{ color: "#4acbf2" }}
                         title="Xóa"
                         onClick={() => handleDelete(row.id)}
                     >
                         <FaTrash />
-                    </IconButton>
+                    </IconButton> */}
                 </SoftBox>
             ),
         },
@@ -452,7 +452,7 @@ function MaterialTable() {
                 >
                     Hủy
                 </Button>
-                <Button
+                {/* <Button
                     variant="contained"
                     color="error"
                     onClick={handleConfirmDelete}
@@ -461,7 +461,7 @@ function MaterialTable() {
                 >
                     {loading && <CircularProgress size={18} sx={{ marginRight: 1 }} />}
                     Xóa
-                </Button>
+                </Button> */}
             </DialogActions>
         </Dialog>
     );
