@@ -111,11 +111,11 @@ public class ChiTietSanPhamService {
             bean.setTayAo(tayAoRepository.findById(vO.getIdTayAo()).orElse(null));
 
         // Tự động sinh mã CTSP + 4 số, ví dụ CTSP0001
-        String maMoi = genMaSanPhamChiTiet();
-        bean.setMaSanPhamChiTiet(maMoi);
 
         bean = chiTietSanPhamRepository.save(bean);
-
+        String maMoi = String.format("CTSP%04d", bean.getId());
+        bean.setMaSanPhamChiTiet(maMoi);
+        bean = chiTietSanPhamRepository.save(bean);
         // --- Mapping nhiều hình ảnh ---
         if (vO.getHinhAnhIds() != null && !vO.getHinhAnhIds().isEmpty()) {
             for (Integer idHinhAnh : vO.getHinhAnhIds()) {
@@ -129,21 +129,6 @@ public class ChiTietSanPhamService {
         }
 
         return bean.getId();
-    }
-
-    // Hàm sinh mã tự động CTSPxxxx
-    private String genMaSanPhamChiTiet() {
-        List<String> allMa = chiTietSanPhamRepository.findAllMaChiTietSanPham();
-        int max = allMa.stream()
-                .filter(ma -> ma != null && ma.startsWith("CTSP"))
-                .mapToInt(ma -> {
-                    try {
-                        return Integer.parseInt(ma.substring(4));
-                    } catch (Exception e) {
-                        return 0;
-                    }
-                }).max().orElse(0);
-        return String.format("CTSP%04d", max + 1);
     }
 
     public void delete(Integer id) {
