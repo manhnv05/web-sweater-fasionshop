@@ -61,6 +61,9 @@ public class PhieuGiamGiaServiceImpl implements PhieuGiamGiaService {
         if (!checkMaPhieuGiamGia.isEmpty()) {
             throw new AppException(ErrorCode.MA_PHIEU_GIAM_GIA_TON_TAI);
         }
+        if (phieuGiamGiaRepository.getPhieuGiamGiaByTenPhieu(phieuGiamGiaRequest.getTenPhieu())){
+            throw new AppException(ErrorCode.PHIEU_GIAM_GIA_EXISTS);
+        }
         PhieuGiamGia phieuGiamGia = PhieuGiamGiaMapper.INSTANCE.toPhieuGiamGia(phieuGiamGiaRequest);
         phieuGiamGiaRepository.save(phieuGiamGia);
         return PhieuGiamGiaMapper.INSTANCE.toResponse(phieuGiamGia);
