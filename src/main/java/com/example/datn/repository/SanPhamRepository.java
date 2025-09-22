@@ -117,4 +117,6 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer>, JpaS
             "LEFT JOIN ctsp.kichThuoc kt " +
             "WHERE sp.trangThai IN (0,1) AND (ctsp.trangThai = 1 OR ctsp IS NULL) AND kt.tenKichCo IS NOT NULL")
     List<String> findDistinctKichThuoc();
+
+    boolean existsSanPhamByTenSanPham(String tenSanPham);
 }

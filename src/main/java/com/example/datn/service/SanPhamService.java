@@ -4,6 +4,8 @@ import com.example.datn.dto.SanPhamDTO;
 import com.example.datn.entity.DanhMuc;
 import com.example.datn.entity.SanPham;
 import com.example.datn.entity.ChiTietSanPham;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.DanhMucRepository;
 import com.example.datn.repository.SanPhamRepository;
 import com.example.datn.repository.ChiTietSanPhamRepository;
@@ -15,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import jakarta.validation.Valid;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,8 +40,11 @@ public class SanPhamService {
         List<SanPham> list = sanPhamRepository.findActiveSanPhamOrderByIdDesc();
         return list.stream().limit(limit).map(this::toDTO).collect(Collectors.toList());
     }
-
+@Transactional
     public Integer save(@Valid SanPhamVO vO) {
+        if (sanPhamRepository.existsSanPhamByTenSanPham(vO.getTenSanPham())) {
+            throw new AppException(ErrorCode.PRODUCT_ALREADY_EXISTS);
+        }
         SanPham bean = new SanPham();
         bean.setMaSanPham(vO.getMaSanPham());
         bean.setTenSanPham(vO.getTenSanPham());
