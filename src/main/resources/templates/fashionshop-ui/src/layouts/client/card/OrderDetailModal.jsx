@@ -62,7 +62,7 @@ export default function OrderDetailModal({ open, onClose, orderCode }) {
   const [productsInOrder, setProductsInOrder] = useState([]);
   const [isEditRecipientOpen, setIsEditRecipientOpen] = useState(false);
   // === CÁC HÀM HELPER (Lấy từ OrderLookup) ===\
-
+  const [isPaid, setIsPaid] = useState(false);
   const formatDateTime = useCallback((isoString) => {
     if (!isoString) return "Chưa cập nhật";
     const date = new Date(isoString);
@@ -402,7 +402,24 @@ export default function OrderDetailModal({ open, onClose, orderCode }) {
     return pggkhres;
   };
 
-
+const checkPaymentStatus = useCallback(async (id) => {
+    if (!id) {
+      setIsPaid(false); // Reset trạng thái nếu không có orderId
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `${BASE_SERVER_URL}chiTietThanhToan/lich-su-thanh-toan/${id}`,
+        { withCredentials: true }
+      );
+      const paymentHistory = response.data?.data || [];
+      setIsPaid(paymentHistory.length > 0); // Set true nếu có lịch sử, ngược lại false
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra lịch sử thanh toán:", error);
+      // Mặc định là chưa thanh toán nếu có lỗi
+      setIsPaid(false);
+    }
+  }, []);
     useEffect(() => {
         const fetchCurrentUser = async () => {
             try {
@@ -605,7 +622,7 @@ export default function OrderDetailModal({ open, onClose, orderCode }) {
         <Typography variant="h6" fontWeight="bold" sx={{ color: "#49a3f1" }}>
           Thông tin người nhận
         </Typography>
-        {orderData && getStatusDetails(orderData.trangThai).text === "Chờ xác nhận" && (
+        {orderData && getStatusDetails(orderData.trangThai).text === "Chờ xác nhận" && !isPaid && (
           // SỬA LẠI onClick CHO ĐÚNG HÀM
           <Button
             variant="outlined"
