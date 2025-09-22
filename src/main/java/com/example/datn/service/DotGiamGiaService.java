@@ -4,6 +4,7 @@ import com.example.datn.dto.DotGiamGiaDTO;
 import com.example.datn.entity.DotGiamGia;
 import com.example.datn.repository.DotGiamGiaRepository;
 import com.example.datn.repository.ChiTietDotGiamGiaRepository;
+import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaQueryRequestVO;
 import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaQueryVO;
 import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaUpdateVO;
 import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaVO;
@@ -55,7 +56,7 @@ public class DotGiamGiaService {
         return toDTO(original);
     }
 
-    public Page<DotGiamGiaDTO> query(DotGiamGiaQueryVO vO) {
+    public Page<DotGiamGiaDTO> query(DotGiamGiaQueryRequestVO vO) {
         int page = vO.getPage() != null ? vO.getPage() : 0;
         int size = vO.getSize() != null ? vO.getSize() : 5;
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
