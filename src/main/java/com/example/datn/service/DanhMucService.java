@@ -2,6 +2,8 @@ package com.example.datn.service;
 
 import com.example.datn.dto.DanhMucDTO;
 import com.example.datn.entity.DanhMuc;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.DanhMucRepository;
 import com.example.datn.vo.danhMucVO.DanhMucQueryVO;
 import com.example.datn.vo.danhMucVO.DanhMucUpdateVO;
@@ -23,6 +25,10 @@ public class DanhMucService {
 
     public Integer save(DanhMucVO vO) {
         DanhMuc bean = new DanhMuc();
+
+        if ( danhMucRepository.existsDanhMucByTenDanhMuc(vO.getTenDanhMuc())){
+            throw new AppException(ErrorCode.THE_DIRECTORY_ALREADY_EXISTS);
+        }
         BeanUtils.copyProperties(vO, bean);
         bean = danhMucRepository.save(bean);
         return bean.getId();

@@ -463,6 +463,7 @@ if (existingProduct) {
                   onKeyDown={(e) => handleConfirmQuantityChange(e, product.idSanPhamChiTiet)}
                   className={styles["quantity-input"]}
                   min="0"
+                    disabled={isPaid}
                 />
                 <button
                   onClick={() =>
@@ -471,6 +472,7 @@ if (existingProduct) {
                       (parseInt(quantityInput[product.idSanPhamChiTiet], 10) || 0) + 1
                     )
                   }
+                    disabled={isPaid}
                 >
                   +
                 </button>

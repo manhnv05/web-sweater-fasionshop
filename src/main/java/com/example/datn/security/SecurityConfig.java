@@ -93,7 +93,8 @@ public class SecurityConfig {
                                 "/api/hoa-don/tra-cuu-hoa-don/**",
                                 "/api/hoa-don/get-all-so-luong-ton-kho",
                                 "/api/vnpay/**",
-                                "/api/chatbot/**"
+                                "/api/chatbot/**",
+                                "/danhMuc/**"
 
 
                         ).permitAll()

@@ -260,6 +260,7 @@ function ProductForm() {
                 }
                 setMaterialOptions(opts);
                 if (opts[0]) setSelectedMaterial(opts[0].value);
+                
             })
             .catch(() => setMaterialOptions([]));
     }, []);

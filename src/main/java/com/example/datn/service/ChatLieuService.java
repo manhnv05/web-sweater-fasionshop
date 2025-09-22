@@ -2,6 +2,8 @@ package com.example.datn.service;
 
 import com.example.datn.dto.ChatLieuDTO;
 import com.example.datn.entity.ChatLieu;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.ChatLieuRepository;
 import com.example.datn.vo.chatLieuVO.ChatLieuQueryVO;
 import com.example.datn.vo.chatLieuVO.ChatLieuUpdateVO;
@@ -33,6 +35,10 @@ public class ChatLieuService {
     })
     public Integer save(ChatLieuVO vO) {
         ChatLieu bean = new ChatLieu();
+
+        if ( chatLieuRepository.existsByTenChatLieu(vO.getTenChatLieu())){
+            throw new AppException(ErrorCode.THE_material_ALREADY_EXISTS);
+        }
         BeanUtils.copyProperties(vO, bean);
         bean = chatLieuRepository.save(bean);
         return bean.getId();

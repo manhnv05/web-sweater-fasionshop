@@ -2,6 +2,8 @@ package com.example.datn.service;
 
 import com.example.datn.dto.ThuongHieuDTO;
 import com.example.datn.entity.ThuongHieu;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.ThuongHieuRepository;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuQueryVO;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuUpdateVO;
@@ -23,6 +25,9 @@ public class ThuongHieuService {
 
     public Integer save(ThuongHieuVO vO) {
         ThuongHieu entity = new ThuongHieu();
+        if (thuongHieuRepository.existsThuongHieuByTenThuongHieu(vO.getTenThuongHieu())) {
+            throw new AppException(ErrorCode.THE_BRAND_ALREADY_EXISTS);
+        }
         BeanUtils.copyProperties(vO, entity);
         entity = thuongHieuRepository.save(entity);
         return entity.getId();

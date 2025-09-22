@@ -313,7 +313,6 @@ AddressFormSection.propTypes = {
         tinhThanhPho: PropTypes.string,
         xaPhuong: PropTypes.string,
          diaChiCuThe: PropTypes.string,
-          diaChiCuThe: PropTypes.string,
         trangThai: PropTypes.number,
         id: PropTypes.number
     }),

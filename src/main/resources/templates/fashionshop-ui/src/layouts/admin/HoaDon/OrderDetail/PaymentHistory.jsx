@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useCallback } from "react";
 import PropTypes from "prop-types";
 import styles from "./PaymentHistory.module.css"; // File CSS module của bạn
 import PaymentModalOrderDetail from "./PaymentModalOrderDetail ";
@@ -22,7 +22,25 @@ const PaymentHistory = ({ orderData }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+   const [isPaid, setIsPaid] = useState(false);
+const checkPaymentStatus = useCallback(async (id) => {
+    if (!id) {
+      setIsPaid(false); // Reset trạng thái nếu không có orderId
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `${BASE_SERVER_URL}chiTietThanhToan/lich-su-thanh-toan/${id}`,
+        { withCredentials: true }
+      );
+      const paymentHistory = response.data?.data || [];
+      setIsPaid(paymentHistory.length > 0); // Set true nếu có lịch sử, ngược lại false
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra lịch sử thanh toán:", error);
+      // Mặc định là chưa thanh toán nếu có lỗi
+      setIsPaid(false);
+    }
+  }, []);
   const fetchData = async () => {
     if (!orderData.id) {
       setLoading(false);
@@ -87,7 +105,7 @@ const PaymentHistory = ({ orderData }) => {
         <div className="card-header d-flex justify-content-between align-items-center">
 
           {/* ĐIỀU KIỆN KIỂM TRA ĐÚNG */}
-          {orderInfo && orderInfo.trangThai === 'DANG_VAN_CHUYEN' && amountToPay > 0 && (
+          {orderInfo && orderInfo.trangThai === 'DANG_VAN_CHUYEN' && amountToPay > 0 && !isPaid && (
               <button className={styles.paymentButton} onClick={() => setIsModalOpen(true)}>
                 Thanh toán
               </button>

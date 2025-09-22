@@ -138,10 +138,23 @@ function MaterialTable() {
             }),
             credentials: "include",
         })
-            .then((response) => {
-                if (!response.ok) throw new Error("Lỗi khi thêm chất liệu");
-                return response.text();
-            })
+            .then(async (response) => {
+            let responseBody;
+
+            try {
+                responseBody = await response.json(); // 👈 đọc body dù là lỗi
+            } catch (err) {
+                throw new Error("Không đọc được phản hồi từ server");
+            }
+
+            if (!response.ok) {
+               let message =
+            responseBody?.errors?.tenChatLieu || responseBody?.message || "Lỗi không xác định";
+                throw new Error(message);
+            }
+
+            return responseBody;
+        })
             .then(() => {
                 setShowModal(false);
                 setNewMaterial({ maChatLieu: "", tenChatLieu: "", trangThai: 1 });
@@ -267,14 +280,14 @@ function MaterialTable() {
                     >
                         <FaEdit />
                     </IconButton>
-                    <IconButton
+                    {/* <IconButton
                         size="small"
                         sx={{ color: "#4acbf2" }}
                         title="Xóa"
                         onClick={() => handleDelete(row.id)}
                     >
                         <FaTrash />
-                    </IconButton>
+                    </IconButton> */}
                 </SoftBox>
             ),
         },
@@ -439,7 +452,7 @@ function MaterialTable() {
                 >
                     Hủy
                 </Button>
-                <Button
+                {/* <Button
                     variant="contained"
                     color="error"
                     onClick={handleConfirmDelete}
@@ -448,7 +461,7 @@ function MaterialTable() {
                 >
                     {loading && <CircularProgress size={18} sx={{ marginRight: 1 }} />}
                     Xóa
-                </Button>
+                </Button> */}
             </DialogActions>
         </Dialog>
     );

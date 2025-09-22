@@ -2,6 +2,8 @@ package com.example.datn.service;
 
 import com.example.datn.dto.KichThuocDTO;
 import com.example.datn.entity.KichThuoc;
+import com.example.datn.exception.AppException;
+import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.KichThuocRepository;
 import com.example.datn.vo.kichThuocVO.KichThuocQueryVO;
 import com.example.datn.vo.kichThuocVO.KichThuocUpdateVO;
@@ -23,6 +25,9 @@ public class KichThuocService {
 
     public Integer save(KichThuocVO vO) {
         KichThuoc bean = new KichThuoc();
+        if (kichThuocRepository.existsKichThuocByTenKichCo(vO.getTenKichCo())) {
+            throw  new AppException(ErrorCode.THE_SIZE_ALREADY_EXISTS);
+        }
         BeanUtils.copyProperties(vO, bean);
         bean = kichThuocRepository.save(bean);
         return bean.getId();

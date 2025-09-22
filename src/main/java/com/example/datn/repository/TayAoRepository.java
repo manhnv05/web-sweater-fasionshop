@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TayAoRepository extends JpaRepository<TayAo, Integer>, JpaSpecificationExecutor<TayAo> {
-
+    public boolean existsTayAoByTenTayAo(String tenTayAo);
 }

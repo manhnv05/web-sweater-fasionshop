@@ -49,7 +49,14 @@ public enum ErrorCode {
 
     INVALID_QUANTITY_PGG(1015, "Số lượng PGG hết", HttpStatus.BAD_REQUEST),
     LICH_SU_HOA_DON_NOT_FOUND(400,"Lịch sử hóa đơn không tồn tại", HttpStatus.NOT_FOUND),
-    THERE_ARE_NO_ORDERS_YET(1018, "Chưa có đơn hàng nào", HttpStatus.BAD_REQUEST); //
+    THERE_ARE_NO_ORDERS_YET(1018, "Chưa có đơn hàng nào", HttpStatus.BAD_REQUEST), //
+    THE_BRAND_ALREADY_EXISTS(1019, "Thương  hiệu đã tồn tại", HttpStatus.BAD_REQUEST),
+    THE_DIRECTORY_ALREADY_EXISTS(1019, "Danh mục đã tồn tại", HttpStatus.BAD_REQUEST),
+    THE_material_ALREADY_EXISTS(1020, "Chất liệu đã tồn tại", HttpStatus.BAD_REQUEST),
+    THE_SIZE_ALREADY_EXISTS(1021, "Kích thước đã tồn tại", HttpStatus.BAD_REQUEST),
+    THE_COLOR_ALREADY_EXISTS(1022, "Màu sắc đã tồn tại", HttpStatus.BAD_REQUEST),
+    TAY_AO_ALREADY_EXISTS(1023, "Tay áo đã tồn tại", HttpStatus.BAD_REQUEST),
+    CO_AO_ALREADY_EXISTS(1023, "Cổ áo đã tồn tại", HttpStatus.BAD_REQUEST);
 
 
     private final int errorCode;

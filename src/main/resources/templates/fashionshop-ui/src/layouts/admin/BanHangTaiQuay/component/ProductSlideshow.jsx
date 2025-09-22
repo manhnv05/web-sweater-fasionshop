@@ -6,7 +6,7 @@ const ProductSlideshow = ({ product }) => {
   const images =
     product.listUrlImage && product.listUrlImage.length > 0
       ? product.listUrlImage
-      : ["https://dummyimage.com/600x600/cccccc/000000&text=N/A"];
+      : ["https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=600&q=80"];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);

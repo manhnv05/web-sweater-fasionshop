@@ -1,5 +1,6 @@
 package com.example.datn.vo.danhMucVO;
 
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -9,6 +10,7 @@ public class DanhMucVO implements Serializable {
 
     // Không cần id vì VO dùng cho thêm mới, id tự sinh
     private String maDanhMuc;
+    @Size(max = 255, message = "Tên chất liệu không được vượt quá 255 ký tự")
     private String tenDanhMuc;
     private Integer trangThai;
 }
