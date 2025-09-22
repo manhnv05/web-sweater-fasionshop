@@ -58,6 +58,7 @@ public class ChiTietSanPhamService {
 
     public Integer save(@Valid ChiTietSanPhamVO vO) {
         // Kiểm tra trùng CTSP theo idSanPham, idMauSac, idKichThuoc (có thể bổ sung thêm idChatLieu, idCoAo,... nếu muốn)
+
         ChiTietSanPham existing = chiTietSanPhamRepository.findExisting(
                 vO.getIdSanPham(),
                 vO.getIdMauSac(),
