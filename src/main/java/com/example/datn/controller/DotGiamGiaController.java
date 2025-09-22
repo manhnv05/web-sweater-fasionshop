@@ -2,6 +2,7 @@ package com.example.datn.controller;
 
 import com.example.datn.dto.DotGiamGiaDTO;
 import com.example.datn.service.DotGiamGiaService;
+import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaQueryRequestVO;
 import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaQueryVO;
 import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaUpdateVO;
 import com.example.datn.vo.dotGiamGiaVO.DotGiamGiaVO;
@@ -49,7 +50,7 @@ public class DotGiamGiaController {
     }
 
     @GetMapping
-    public Page<DotGiamGiaDTO> query(@Valid DotGiamGiaQueryVO vO) {
+    public Page<DotGiamGiaDTO> query(@Valid DotGiamGiaQueryRequestVO vO) {
         return dotGiamGiaService.query(vO);
     }
 }
