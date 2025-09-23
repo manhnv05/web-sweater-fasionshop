@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types'; // FIX 1: Import PropTypes
+import PropTypes from 'prop-types';
 import {
     Box,
     Typography,
@@ -15,12 +15,13 @@ import {
     Button,
     InputAdornment,
     IconButton,
+    Fade,
+    Paper
 } from '@mui/material';
 import {
     AccountCircleOutlined,
     PersonOutline,
     LocationOnOutlined,
-    ListAltOutlined,
     ConfirmationNumberOutlined,
     LockOutlined,
     EditOutlined,
@@ -42,10 +43,8 @@ const ChangePasswordForm = () => {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-
     const [formData, setFormData] = useState({
-        email: '', // Nếu email không cố định
+        email: '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
@@ -60,58 +59,53 @@ const ChangePasswordForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (formData.newPassword !== formData.confirmPassword) {
             toast.warning("Mật khẩu mới không khớp!");
             return;
         }
-
         try {
             const response = await axios.post('http://localhost:8080/api/auth/change-password', {
                 email: formData.email,
                 oldPassword: formData.currentPassword,
                 newPassword: formData.newPassword,
-            }, {
-                withCredentials: true // <-- Thêm dòng này để gửi cookie, session
-            });
-
-            toast.success(response.data); // Hiển thị thông báo thành công
-
+            }, { withCredentials: true });
+            toast.success(response.data);
             setFormData({
                 email: '',
                 currentPassword: '',
                 newPassword: '',
                 confirmPassword: '',
             });
-
-            // Nếu có các state showPassword cũng reset luôn nếu muốn
             setShowCurrentPassword(false);
             setShowNewPassword(false);
             setShowConfirmPassword(false);
         } catch (error) {
-            console.log(error)
             toast.error(error.response?.data || 'Đổi mật khẩu thất bại');
         }
     };
 
-
     return (
-        <Box
-            sx={{
-                width: '100%',
-                p: { xs: 3, sm: 6 }, // tăng padding
-            }}
-        >
-            <Stack spacing={2} mb={5}>
-                <Typography variant="h4" component="h1" fontWeight="bold">
+        <Paper elevation={6} sx={{
+            width: '100%',
+            maxWidth: 500,
+            mx: 'auto',
+            p: { xs: 3, sm: 5 },
+            borderRadius: 6,
+            backdropFilter: 'blur(3px)',
+            background: 'rgba(255,255,255,0.85)',
+            boxShadow: '0 8px 32px rgba(76,110,245,0.11)'
+        }}>
+            <Stack spacing={2} mb={5} alignItems="center">
+                <Typography variant="h4" fontWeight="bold"
+                            sx={{ background: 'linear-gradient(90deg,#49a3f1,#1769aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                     Đổi mật khẩu
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body1" color="text.secondary" textAlign="center">
                     Để bảo mật tài khoản, vui lòng không chia sẻ mật khẩu cho người khác
                 </Typography>
             </Stack>
             <form onSubmit={handleSubmit}>
-                <Stack spacing={4} maxWidth="650px">
+                <Stack spacing={3}>
                     <TextField
                         fullWidth
                         label="Email"
@@ -119,8 +113,8 @@ const ChangePasswordForm = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        sx={{ borderRadius: 3, background: "#f9fbfc" }}
                     />
-
                     <TextField
                         required
                         fullWidth
@@ -129,7 +123,7 @@ const ChangePasswordForm = () => {
                         type={showCurrentPassword ? 'text' : 'password'}
                         value={formData.currentPassword}
                         onChange={handleChange}
-                        sx={{ '& .MuiInputBase-root': { height: 55, fontSize: '1rem' } }}
+                        sx={{ '& .MuiInputBase-root': { height: 55, fontSize: '1rem', borderRadius: 3, background: "#f9fbfc" } }}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
@@ -140,7 +134,6 @@ const ChangePasswordForm = () => {
                             ),
                         }}
                     />
-
                     <TextField
                         required
                         fullWidth
@@ -149,7 +142,7 @@ const ChangePasswordForm = () => {
                         type={showNewPassword ? 'text' : 'password'}
                         value={formData.newPassword}
                         onChange={handleChange}
-                        sx={{ '& .MuiInputBase-root': { height: 55, fontSize: '1rem' } }}
+                        sx={{ '& .MuiInputBase-root': { height: 55, fontSize: '1rem', borderRadius: 3, background: "#f9fbfc" } }}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
@@ -160,7 +153,6 @@ const ChangePasswordForm = () => {
                             ),
                         }}
                     />
-
                     <TextField
                         required
                         fullWidth
@@ -169,7 +161,7 @@ const ChangePasswordForm = () => {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        sx={{ '& .MuiInputBase-root': { height: 55, fontSize: '1rem' } }}
+                        sx={{ '& .MuiInputBase-root': { height: 55, fontSize: '1rem', borderRadius: 3, background: "#f9fbfc" } }}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
@@ -180,32 +172,47 @@ const ChangePasswordForm = () => {
                             ),
                         }}
                     />
-
-                    <Button type="submit" variant="contained" color="primary">
+                    <Button type="submit"
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            sx={{
+                                boxShadow: "0 3px 12px #49a3f133",
+                                borderRadius: 3,
+                                fontWeight: 700,
+                                letterSpacing: 1,
+                                background: "linear-gradient(90deg,#49a3f1,#1769aa)",
+                                transition: "all .2s",
+                                '&:hover': { background: "linear-gradient(90deg,#1769aa,#49a3f1)" }
+                            }}>
                         Đổi mật khẩu
                     </Button>
                 </Stack>
             </form>
-        </Box>
+        </Paper>
     );
 };
 
-// --- Component Placeholder cho các mục khác ---
 const PlaceholderContent = ({ title }) => (
-    <Box sx={{ p: 4, width: '100%' }}>
-        <Typography variant="h4">{title}</Typography>
-        {/* FIX 2: Sửa lỗi unescaped-entities */}
-        <Typography>Nội dung cho mục &apos;{title}&apos; sẽ được hiển thị ở đây.</Typography>
-    </Box>
+    <Fade in>
+        <Box sx={{
+            p: 4,
+            width: '100%',
+            borderRadius: 4,
+            bgcolor: "rgba(250,250,253,0.95)",
+            boxShadow: "0 2px 10px #49a3f133",
+            textAlign: "center"
+        }}>
+            <Typography variant="h4" fontWeight={700} sx={{ color: "#49a3f1" }}>{title}</Typography>
+            <Typography mt={2}>Nội dung cho mục &apos;{title}&apos; sẽ được hiển thị ở đây.</Typography>
+        </Box>
+    </Fade>
 );
 
-// FIX 1: Thêm prop validation cho PlaceholderContent
 PlaceholderContent.propTypes = {
     title: PropTypes.string.isRequired,
 };
 
-
-// --- Component Sidebar ---
 const Sidebar = ({ selectedItem, onSelectItem, nameUser }) => {
     const menuItems = [
         { key: 'profile', text: 'Hồ sơ', icon: <PersonOutline /> },
@@ -213,31 +220,62 @@ const Sidebar = ({ selectedItem, onSelectItem, nameUser }) => {
         { key: 'vouchers', text: 'Phiếu giảm giá', icon: <ConfirmationNumberOutlined /> },
         { key: 'change-password', text: 'Đổi mật khẩu', icon: <LockOutlined /> },
     ];
-
     return (
-        <Box
-            sx={{
-                width: { xs: '100%', md: '300px' }, // rộng hơn
-                flexShrink: 0,
-                borderRight: { md: '1px solid #E0E0E0' },
-                py: 3
-            }}
-        >
-            <Box sx={{ display: 'flex', alignItems: 'center', p: 3, gap: 2, borderBottom: '1px solid #E0E0E0' }}>
-                <Avatar alt={nameUser} src="/static/images/avatar/1.jpg" sx={{ width: 60, height: 60 }} />
+        <Paper elevation={0} sx={{
+            width: { xs: '100%', md: 320 },
+            flexShrink: 0,
+            borderRight: { md: '1px solid #E0E0E0' },
+            py: 5,
+            px: 0,
+            bgcolor: "rgba(249,251,252,0.85)",
+            borderRadius: { xs: 0, md: "32px" },
+            boxShadow: "0 6px 28px rgba(76,110,245,0.13)",
+            minHeight: { md: "90vh" }
+        }}>
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                p: 4,
+                gap: 3,
+                borderBottom: '1px solid #E0E0E0',
+                background: 'linear-gradient(90deg,#f9fbfc,#f5f4ee 80%)',
+                borderRadius: "24px 24px 0 0",
+            }}>
+                <Avatar
+                    alt={nameUser}
+                    src="/static/images/avatar/1.jpg"
+                    sx={{
+                        width: 72,
+                        height: 72,
+                        boxShadow: "0 2px 8px #49a3f155",
+                        border: "3px solid #49a3f1"
+                    }}
+                />
                 <Stack>
-                    <Typography fontWeight="bold" variant="h6">{nameUser}</Typography>
-                    <Link href="#" underline="none" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.9rem' }}>
+                    <Typography fontWeight="bold" variant="h5" sx={{ color: "#1769aa" }}>{nameUser}</Typography>
+                    <Link href="#" underline="none" color="text.secondary"
+                          sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              fontSize: '1rem',
+                              transition: "color .2s",
+                              '&:hover': { color: "#49a3f1" }
+                          }}>
                         <EditOutlined sx={{ fontSize: '1rem' }} /> Sửa hồ sơ
                     </Link>
                 </Stack>
             </Box>
-
-            <List>
+            <List sx={{ mt: 4 }}>
                 <ListItem disablePadding>
                     <ListItemButton>
-                        <ListItemIcon><AccountCircleOutlined /></ListItemIcon>
-                        <ListItemText primary="Tài khoản của tôi" primaryTypographyProps={{ fontWeight: 'bold', fontSize: '1.1rem' }} />
+                        <ListItemIcon><AccountCircleOutlined sx={{ color: "#49a3f1" }} /></ListItemIcon>
+                        <ListItemText primary="Tài khoản của tôi"
+                                      primaryTypographyProps={{
+                                          fontWeight: 'bold',
+                                          fontSize: '1.2rem',
+                                          color: "#1769aa"
+                                      }} />
                     </ListItemButton>
                 </ListItem>
                 <Box sx={{ pl: 3 }}>
@@ -247,73 +285,66 @@ const Sidebar = ({ selectedItem, onSelectItem, nameUser }) => {
                                 selected={selectedItem === item.key}
                                 onClick={() => onSelectItem(item.key)}
                                 sx={{
-                                    borderRadius: 2,
+                                    borderRadius: 3,
                                     textTransform: "none",
-                                    fontWeight: 400,
-                                    color: selectedItem === item.key ? "#49a3f1" : "inherit",
-                                    border: selectedItem === item.key ? "1px solid #49a3f1" : "1px solid transparent",
-                                    boxShadow: "none",
-                                    py: 1.5,
+                                    fontWeight: 500,
+                                    color: selectedItem === item.key ? "#49a3f1" : "#333",
+                                    background: selectedItem === item.key ? "linear-gradient(90deg,#eef7ff,#f9fbfc)" : "transparent",
+                                    border: selectedItem === item.key ? "2px solid #49a3f1" : "2px solid transparent",
+                                    boxShadow: selectedItem === item.key ? "0 2px 10px #49a3f122" : "none",
+                                    py: 2,
+                                    my: 1,
+                                    transition: "all .2s",
                                     "&:hover": {
                                         borderColor: "#1769aa",
-                                        background: "#f0f6fd",
+                                        background: "linear-gradient(90deg,#f0f6fd,#eef7ff)",
                                         color: "#1769aa",
-                                        "& .MuiListItemIcon-root": {
-                                            color: "#1769aa",
-                                        },
+                                        "& .MuiListItemIcon-root": { color: "#1769aa" },
                                     },
                                     "&.Mui-selected": {
-                                        backgroundColor: "transparent !important", // chắc chắn bỏ màu nền mặc định
+                                        backgroundColor: "transparent !important",
                                         color: "#49a3f1",
-                                        "& .MuiListItemIcon-root": {
-                                            color: "#49a3f1",
-                                        },
+                                        "& .MuiListItemIcon-root": { color: "#49a3f1" },
                                     },
                                     "&.Mui-selected:hover": {
-                                        backgroundColor: "#f0f6fd !important", // hover khi đang selected
+                                        backgroundColor: "#f0f6fd !important",
                                     },
                                 }}
                             >
                                 <ListItemIcon>{item.icon}</ListItemIcon>
-                                <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: "1rem" }} />
+                                <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: "1.1rem" }} />
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </Box>
             </List>
-        </Box>
+        </Paper>
     );
 };
 
-// FIX 1: Thêm prop validation cho Sidebar
 Sidebar.propTypes = {
     selectedItem: PropTypes.string.isRequired,
     onSelectItem: PropTypes.func.isRequired,
     nameUser: PropTypes.string.isRequired,
 };
 
-
-// --- Component Layout chính ---
 const ProfileLayout = () => {
     const [selectedContent, setSelectedContent] = useState('change-password');
-    const [user, setUser] = useState(null)
+    const [user, setUser] = useState(null);
 
     const loadUser = async () => {
         const res = await fetch(`http://localhost:8080/api/auth/me`, {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            credentials: "include", // <-- Thêm dòng này!
+            headers: { "Content-Type": "application/json" },
+            credentials: "include"
         });
-        const result = await res.json()
-        console.log(result)
-        setUser(result)
-    }
+        const result = await res.json();
+        setUser(result);
+    };
 
     useEffect(() => {
-        loadUser()
-    }, [])
+        loadUser();
+    }, []);
 
     const renderContent = () => {
         switch (selectedContent) {
@@ -331,12 +362,32 @@ const ProfileLayout = () => {
     };
 
     return (
-        <Box sx={{ bgcolor: "linear-gradient(180deg,#f9fbfc 70%,#f5f4ee 100%)" }}>
+        <Box sx={{
+            minHeight: '100vh',
+            background: "linear-gradient(150deg,#f9fbfc 70%,#f5f4ee 100%)"
+        }}>
             <Header />
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                minHeight: '95vh',
+                background: 'linear-gradient(150deg,#f5f5f5 80%,#eaf6ff 100%)',
+                pt: { xs: 0, md: 6 }
+            }}>
                 {user && (<Sidebar selectedItem={selectedContent} onSelectItem={setSelectedContent} nameUser={user.tenKh} />)}
-                <Box component="main" sx={{ flexGrow: 1, p: 5, backgroundColor: '#fff' }}>
-                    {renderContent()}
+                <Box component="main" sx={{
+                    flexGrow: 1,
+                    p: { xs: 3, sm: 7 },
+                    backgroundColor: 'transparent',
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}>
+                    <Fade in>
+                        <Box sx={{ width: "100%" }}>
+                            {renderContent()}
+                        </Box>
+                    </Fade>
                 </Box>
             </Box>
             <Footer />

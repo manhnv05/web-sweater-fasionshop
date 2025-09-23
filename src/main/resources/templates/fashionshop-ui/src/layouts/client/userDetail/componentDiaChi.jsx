@@ -1,96 +1,90 @@
 import React, { useEffect, useState } from "react";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, IconButton, CircularProgress,
-    MenuItem, Tooltip, Chip, FormControl, Select, Paper, Autocomplete, TextField, Grid
+    Tooltip, Chip, Paper, Autocomplete, TextField, Grid
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import AddIcon from "@mui/icons-material/Add";
 import PlaceIcon from "@mui/icons-material/Place";
 import CloseIcon from "@mui/icons-material/Close";
-import { MapPin, X, Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import { toast } from "react-toastify";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { styled } from "@mui/material/styles";
 
+// --- Style Constants ---
 const SOFT_PRIMARY = "#2563eb";
-const SOFT_BG = "#f8fafc";
-const SOFT_BORDER = "#e5e7eb";
+const SOFT_BG_GRADIENT = "linear-gradient(120deg, #f4f8fe 80%, #e0e7ef 100%)";
+const SOFT_BORDER = "#e0e7ef";
 const SOFT_GREEN = "#22c55e";
 const SOFT_BADGE_TEXT = "#fff";
-const SOFT_CARD_SHADOW = "0 1px 0 0 #dbeafe";
+const SOFT_CARD_SHADOW = "0 8px 32px #2563eb1a";
 const API_BASE_URL = "http://localhost:8080";
 const GHN_API_BASE_URL = "https://online-gateway.ghn.vn/shiip/public-api/master-data";
-const GHN_API_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0"; // Replace with your token
+const GHN_API_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0";
 const GHN_API_CONFIG = { headers: { token: GHN_API_TOKEN } };
 
-const GreenBadge = styled(Chip)(({ theme }) => ({
+// --- Styled Components ---
+const GreenBadge = styled(Chip)({
     background: SOFT_GREEN,
     color: SOFT_BADGE_TEXT,
     fontWeight: 700,
-    fontSize: 12,
-    height: 22,
+    fontSize: 13,
+    height: 24,
     minWidth: 0,
     display: "flex",
     alignItems: "center",
     gap: 4,
-    paddingLeft: 6,
-    paddingRight: 6,
-    ".MuiChip-icon": {
-        fontSize: 15,
-        marginRight: 3
-    }
-}));
+    paddingLeft: 8,
+    paddingRight: 8,
+    boxShadow: "0 2px 8px #22c55e33"
+});
 
 const SmallActionIconButton = styled(IconButton)(({ theme }) => ({
-    border: "none",
-    borderRadius: 6,
-    background: "none",
-    padding: 5,
-    fontSize: 18,
+    borderRadius: 10,
+    background: SOFT_BG_GRADIENT,
+    padding: 8,
+    fontSize: 20,
     color: theme.palette.action.active,
-    marginLeft: 8,
-    marginRight: 0,
-    transition: "background 0.15s, color 0.15s",
+    marginLeft: 10,
+    boxShadow: "0 2px 8px #2563eb12",
+    transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
     "&:hover": {
-        background: "none",
+        background: "#2563eb12",
         color: SOFT_PRIMARY,
-        boxShadow: `0 0 0 2px ${SOFT_PRIMARY}33`
-    },
-    "&:first-of-type": {
-        marginLeft: 0
+        boxShadow: `0 0 0 4px ${SOFT_PRIMARY}33`
     },
     "&.set-default:hover": {
-        color: "#16a34a",
-        boxShadow: `0 0 0 2px #16a34a33`
+        color: SOFT_GREEN,
+        boxShadow: `0 0 0 4px #16a34a33`
     },
     "&.edit:hover": {
         color: "#f59e0b",
-        boxShadow: `0 0 0 2px #f59e0b33`
+        boxShadow: `0 0 0 4px #f59e0b33`
     },
     "&.delete:hover": {
         color: "#ef4444",
-        boxShadow: `0 0 0 2px #ef444433`
+        boxShadow: `0 0 0 4px #ef444433`
     }
 }));
 
 const AnimatedCard = styled(Paper)(({ theme }) => ({
-    transition: "border-color 0.2s, box-shadow 0.2s",
-    boxShadow: "none",
-    border: `1.5px solid ${SOFT_BORDER}`,
-    background: "#fff",
-    borderRadius: 8,
-    padding: "14px 18px",
-    marginBottom: 10,
+    transition: "border-color 0.25s, box-shadow 0.25s, background 0.25s",
+    boxShadow: SOFT_CARD_SHADOW,
+    border: `2px solid ${SOFT_BORDER}`,
+    background: "rgba(255,255,255,0.97)",
+    borderRadius: 18,
+    padding: "20px 28px",
+    marginBottom: 18,
     "&.fade-in": {
-        animation: "fadeIn 0.5s"
+        animation: "fadeIn 0.48s"
     },
     "&:hover": {
         borderColor: SOFT_PRIMARY,
-        boxShadow: SOFT_CARD_SHADOW
+        background: "linear-gradient(90deg,#f4f8fe 80%,#e0e7ef 100%)"
     },
     "@keyframes fadeIn": {
         from: { opacity: 0, transform: "translateY(20px)" },
@@ -98,50 +92,38 @@ const AnimatedCard = styled(Paper)(({ theme }) => ({
     }
 }));
 
-const AddAddressButton = styled(Button)(({ theme }) => ({
+const AddAddressButton = styled(Button)({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "0.5rem",
-    height: "2.25rem",
-    padding: "0 0.75rem",
-    borderRadius: "0.375rem",
-    backgroundColor: "hsl(210, 100%, 47%)",
-    color: "hsl(0, 0%, 100%)",
-    fontSize: "0.875rem",
-    fontWeight: 500,
+    gap: "0.7rem",
+    height: "2.7rem",
+    padding: "0 1.15rem",
+    borderRadius: "0.65rem",
+    background: "linear-gradient(90deg,#2563eb 60%,#60a5fa 100%)",
+    color: "#fff",
+    fontSize: "1.05rem",
+    fontWeight: 700,
     textTransform: "none",
-    whiteSpace: "nowrap",
-    transition: "color 0.15s, box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-    cursor: "pointer",
-    border: "0",
-    boxShadow: "none",
+    letterSpacing: "0.02em",
+    transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+    boxShadow: "0 2px 10px #2563eb1a",
     "&:hover": {
-        backgroundColor: "hsl(210, 100%, 47%)",
-        boxShadow: "0 0 0 4px rgba(37, 99, 235, 0.15)",
-        filter: "none",
-        transform: "none"
+        background: "linear-gradient(90deg,#1744a3 60%,#2563eb 100%)",
+        boxShadow: "0 0 0 4px #2563eb22"
     }
-}));
+});
 
+// --- Address Form Section ---
 function AddressFormSection({ open, onClose, onSubmit, initialData, isEdit }) {
-    const [form, setForm] = useState({
-        tinhThanhPho: "",
-        xaPhuong: "",
-        trangThai: 0
-    });
     const [provinces, setProvinces] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [wards, setWards] = useState([]);
-
-    // State for selected values in the form
     const [selectedProvince, setSelectedProvince] = useState(null);
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [selectedWard, setSelectedWard] = useState(null);
     const [diaChiCuThe, setdiaChiCuThe] = useState("");
     const [isDefault, setIsDefault] = useState(false);
-
-    // UI State
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -151,20 +133,23 @@ function AddressFormSection({ open, onClose, onSubmit, initialData, isEdit }) {
                 try {
                     const res = await axios.get(`${GHN_API_BASE_URL}/province`, GHN_API_CONFIG);
                     setProvinces(res.data?.data || []);
-                } catch (error) { toast.error("Lỗi khi tải danh sách Tỉnh/Thành"); }
+                } catch {
+                    toast.error("Lỗi khi tải danh sách Tỉnh/Thành");
+                }
             };
             fetchProvinces();
         }
     }, [open]);
 
-    // 2. Fetch districts when a province is selected
     useEffect(() => {
         if (selectedProvince) {
             const fetchDistricts = async () => {
                 try {
                     const res = await axios.get(`${GHN_API_BASE_URL}/district?province_id=${selectedProvince.ProvinceID}`, GHN_API_CONFIG);
                     setDistricts(res.data?.data || []);
-                } catch (error) { toast.error("Lỗi khi tải danh sách Quận/Huyện"); }
+                } catch {
+                    toast.error("Lỗi khi tải danh sách Quận/Huyện");
+                }
             };
             fetchDistricts();
         }
@@ -180,21 +165,23 @@ function AddressFormSection({ open, onClose, onSubmit, initialData, isEdit }) {
                 try {
                     const res = await axios.get(`${GHN_API_BASE_URL}/ward?district_id=${selectedDistrict.DistrictID}`, GHN_API_CONFIG);
                     setWards(res.data?.data || []);
-                } catch (error) { toast.error("Lỗi khi tải danh sách Phường/Xã"); }
+                } catch {
+                    toast.error("Lỗi khi tải danh sách Phường/Xã");
+                }
             };
             fetchWards();
         }
         setWards([]);
         setSelectedWard(null);
     }, [selectedDistrict]);
+
     useEffect(() => {
         if (open && isEdit && initialData && provinces.length > 0) {
             const province = provinces.find(p => p.ProvinceName === initialData.tinhThanhPho);
             if (province) setSelectedProvince(province);
-setdiaChiCuThe(initialData.diaChiCuThe || "");
+            setdiaChiCuThe(initialData.diaChiCuThe || "");
             setIsDefault(initialData.trangThai === 1);
         } else if (open && !isEdit) {
-            // Reset form when opening in "add new" mode
             setSelectedProvince(null);
             setSelectedDistrict(null);
             setSelectedWard(null);
@@ -204,41 +191,15 @@ setdiaChiCuThe(initialData.diaChiCuThe || "");
         }
     }, [open, isEdit, initialData, provinces]);
 
-    const labelStyle = {
-        fontWeight: 600,
-        color: "#1769aa",
-        mb: 0.5,
-        fontSize: 15,
-        display: "block"
-    };
-
     const validate = () => {
         const newErrors = {};
         if (!selectedProvince) newErrors.province = "Vui lòng chọn Tỉnh/Thành phố";
         if (!selectedDistrict) newErrors.district = "Vui lòng chọn Quận/Huyện";
         if (!selectedWard) newErrors.ward = "Vui lòng chọn Phường/Xã";
- if (!diaChiCuThe.trim()) newErrors.diaChiCuThe = "Vui lòng nhập địa chỉ cụ thể";
+        if (!diaChiCuThe.trim()) newErrors.diaChiCuThe = "Vui lòng nhập địa chỉ cụ thể";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-
-    const validateBeforeSubmit = () => {
-        const validationError = validate();
-        if (validationError) {
-            toast.error(validationError);
-            return false;
-        }
-        return true;
-    };
-
-    function getProvinceNameById(id) {
-        const found = provinces.find((p) => String(p.id) === String(id));
-        return found ? found.province : "";
-    }
-    function getWardNameById(name) {
-        const found = wards.find((w) => w.name === name);
-        return found ? found.name : name;
-    }
 
     const handleSubmit = async () => {
         if (!validate()) {
@@ -262,43 +223,42 @@ setdiaChiCuThe(initialData.diaChiCuThe || "");
     if (!open) return null;
 
     return (
-        <AnimatedCard elevation={3} className="fade-in" sx={{ mt: 2, p: 3, borderColor: "primary.main" }}>
+        <AnimatedCard elevation={4} className="fade-in" sx={{ mt: 3, p: 3, borderColor: SOFT_PRIMARY }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6" fontWeight={700}>{isEdit ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}</Typography>
-                <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
+                <Typography variant="h6" fontWeight={800} sx={{ color: SOFT_PRIMARY }}>
+                    {isEdit ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
+                </Typography>
+                <IconButton onClick={onClose} size="small" sx={{ color: SOFT_PRIMARY }}>
+                    <CloseIcon />
+                </IconButton>
             </Box>
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                    <Autocomplete options={provinces} getOptionLabel={(o) => o.ProvinceName || ""} value={selectedProvince} isOptionEqualToValue={(option, value) => option.ProvinceID === value.ProvinceID} onChange={(e, v) => setSelectedProvince(v)} renderInput={(params) => <TextField {...params} label="Tỉnh/Thành phố" fullWidth error={!!errors.province} helperText={errors.province} />} />
+                    <Autocomplete options={provinces} getOptionLabel={(o) => o.ProvinceName || ""} value={selectedProvince} isOptionEqualToValue={(option, value) => option.ProvinceID === value?.ProvinceID} onChange={(e, v) => setSelectedProvince(v)} renderInput={(params) => <TextField {...params} label="Tỉnh/Thành phố" fullWidth error={!!errors.province} helperText={errors.province} />} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <Autocomplete options={districts} getOptionLabel={(o) => o.DistrictName || ""} value={selectedDistrict} disabled={!selectedProvince} isOptionEqualToValue={(option, value) => option.DistrictID === value.DistrictID} onChange={(e, v) => setSelectedDistrict(v)} renderInput={(params) => <TextField {...params} label="Quận/Huyện" fullWidth error={!!errors.district} helperText={errors.district} />} />
+                    <Autocomplete options={districts} getOptionLabel={(o) => o.DistrictName || ""} value={selectedDistrict} disabled={!selectedProvince} isOptionEqualToValue={(option, value) => option.DistrictID === value?.DistrictID} onChange={(e, v) => setSelectedDistrict(v)} renderInput={(params) => <TextField {...params} label="Quận/Huyện" fullWidth error={!!errors.district} helperText={errors.district} />} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <Autocomplete options={wards} getOptionLabel={(o) => o.WardName || ""} value={selectedWard} disabled={!selectedDistrict} isOptionEqualToValue={(option, value) => option.WardCode === value.WardCode} onChange={(e, v) => setSelectedWard(v)} renderInput={(params) => <TextField {...params} label="Phường/Xã" fullWidth error={!!errors.ward} helperText={errors.ward} />} />
+                    <Autocomplete options={wards} getOptionLabel={(o) => o.WardName || ""} value={selectedWard} disabled={!selectedDistrict} isOptionEqualToValue={(option, value) => option.WardCode === value?.WardCode} onChange={(e, v) => setSelectedWard(v)} renderInput={(params) => <TextField {...params} label="Phường/Xã" fullWidth error={!!errors.ward} helperText={errors.ward} />} />
                 </Grid>
-<Grid item xs={12}>
-        <TextField
-            label="Địa chỉ cụ thể (Số nhà, tên đường)"
-            fullWidth
-            value={diaChiCuThe}
-            onChange={(e) => setdiaChiCuThe(e.target.value)}
-            error={!!errors.diaChiCuThe}
-            helperText={errors.diaChiCuThe}
-        />
-    </Grid>
+                <Grid item xs={12}>
+                    <TextField label="Địa chỉ cụ thể (Số nhà, tên đường)" fullWidth value={diaChiCuThe} onChange={(e) => setdiaChiCuThe(e.target.value)} error={!!errors.diaChiCuThe} helperText={errors.diaChiCuThe} />
+                </Grid>
             </Grid>
             {!isEdit && (
-                <Box display="flex" alignItems="center" gap={1} mt={2}>
-                    <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} id="default-address-checkbox" style={{ cursor: 'pointer' }} />
-                    <label htmlFor="default-address-checkbox" style={{ fontWeight: 500, color: "#1976d2", cursor: "pointer" }}>
+                <Box display="flex" alignItems="center" gap={1.2} mt={2} ml={0.5}>
+                    <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} id="default-address-checkbox" style={{ cursor: 'pointer', accentColor: SOFT_PRIMARY }} />
+                    <label htmlFor="default-address-checkbox" style={{ fontWeight: 600, color: SOFT_PRIMARY, cursor: "pointer", fontSize: "1.1rem" }}>
                         Đặt làm địa chỉ mặc định
                     </label>
                 </Box>
             )}
             <Box display="flex" gap={2} mt={3}>
-                <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading}>{loading ? <CircularProgress size={24} /> : (isEdit ? "Cập nhật" : "Lưu")}</Button>
-                <Button onClick={onClose} variant="outlined">Hủy</Button>
+                <Button onClick={handleSubmit} variant="contained" color="primary" disabled={loading} sx={{ minWidth: 110, fontWeight: 700 }}>
+                    {loading ? <CircularProgress size={24} /> : (isEdit ? "Cập nhật" : "Lưu")}
+                </Button>
+                <Button onClick={onClose} variant="outlined" sx={{ minWidth: 80, fontWeight: 600 }}>Hủy</Button>
             </Box>
         </AnimatedCard>
     );
@@ -310,7 +270,7 @@ AddressFormSection.propTypes = {
     onSubmit: PropTypes.func.isRequired,
     initialData: PropTypes.shape({
         tinhThanhPho: PropTypes.string,
-          diaChiCuThe: PropTypes.string,
+        diaChiCuThe: PropTypes.string,
         xaPhuong: PropTypes.string,
         trangThai: PropTypes.number,
         id: PropTypes.number
@@ -318,6 +278,7 @@ AddressFormSection.propTypes = {
     isEdit: PropTypes.bool
 };
 
+// --- Main AddressManager Component ---
 export default function AddressManager({ customerId }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -341,16 +302,8 @@ export default function AddressManager({ customerId }) {
     });
 
     useEffect(() => {
-        console.log(customerId)
-        if (customerId) {
-            initialize()
-        };
-        // eslint-disable-next-line
-    }, []);
-
-    const chonDiaChi = async (event) => {
-        console.log(event);
-    }
+        if (customerId) initialize();
+    }, [customerId]);
 
     const initialize = async () => {
         setLoading(true);
@@ -360,7 +313,7 @@ export default function AddressManager({ customerId }) {
             const customerRes = response?.data?.data || response?.data;
             setCustomerInfo(customerRes);
             setAddresses(sortAddressesWithDefaultFirst(customerRes?.diaChis || []));
-        } catch (e) {
+        } catch {
             toast.error("Không thể tải thông tin khách hàng hoặc danh sách địa chỉ.");
         } finally {
             setLoading(false);
@@ -381,7 +334,7 @@ export default function AddressManager({ customerId }) {
         try {
             const res = await axios.get(`${API_BASE_URL}/khachHang/${customerId}/diaChis`, { withCredentials: true });
             setAddresses(sortAddressesWithDefaultFirst(res.data.data || []));
-        } catch (e) {
+        } catch {
             toast.error("Không thể tải danh sách địa chỉ của khách hàng.");
         } finally {
             setLoading(false);
@@ -521,87 +474,60 @@ export default function AddressManager({ customerId }) {
         setFormSectionData(null);
     };
 
+    // --- Render ---
     return (
-        <Box sx={{ maxWidth: "800px", width: "100%", margin: "0 auto", padding: "1rem" }}>
-            {/* Header Section */}
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginBottom: "1rem",
-                    gap: "0.375rem",
-                    textAlign: { xs: "center", sm: "left" },
-                    fontFamily:
-                        'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-                    color: "hsl(222.2, 84%, 4.9%)"
-                }}
-            >
+        <Box sx={{
+            maxWidth: "950px",
+            width: "100%",
+            margin: "0 auto",
+            padding: { xs: "1.5rem", md: "2.5rem" },
+            background: SOFT_BG_GRADIENT,
+            // borderRadius: 34,
+            boxShadow: "0 8px 38px #2563eb18"
+        }}>
+            {/* Header */}
+            <Box sx={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: "1.5rem",
+                gap: "0.375rem",
+                alignItems: "center"
+            }}>
                 <Typography
                     variant="h2"
                     sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        letterSpacing: "-0.025em",
-                        color: "hsl(222.2, 84%, 4.9%)",
+                        gap: "0.8rem",
+                        fontSize: { xs: "1.15rem", md: "1.45rem" },
+                        fontWeight: 900,
+                        letterSpacing: "-0.04em",
+                        color: SOFT_PRIMARY,
                         fontFamily: "ui-sans-serif, system-ui, sans-serif"
                     }}
                 >
                     <MapPin
-                        size={20}
-                        color="hsl(210, 100%, 47%)"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                        style={{ marginRight: "0.5rem" }}
+                        size={26}
+                        color={SOFT_PRIMARY}
+                        style={{ marginRight: "0.55rem" }}
                     />
-                    Danh sách địa chỉ của {customerInfo?.tenKhachHang}
-                </Typography>
-            </Box>
-
-            {/* Actions Section */}
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 2,
-                    fontFamily: "ui-sans-serif, system-ui, sans-serif",
-                    color: "hsl(222.2, 84%, 4.9%)"
-                }}
-            >
-                <Typography
-                    variant="h3"
-                    sx={{
-                        fontFamily:
-                            'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-                        fontWeight: 500,
-                        fontSize: "1.125rem",
-                        lineHeight: "1.75rem",
-                        color: "hsl(222.2, 84%, 4.9%)",
-                        margin: 0
-                    }}
-                >
-                    Địa chỉ ({addresses.length}/5)
+                    Địa chỉ của <span style={{ color: "#111", fontWeight: 900, marginLeft: 7 }}>{customerInfo?.tenKhachHang}</span>
                 </Typography>
                 <AddAddressButton
                     onClick={handleAddClick}
-                    startIcon={<Plus size={16} />}
+                    startIcon={<Plus size={20} />}
                     disabled={addresses.length >= 5}
                 >
                     Thêm địa chỉ
                 </AddAddressButton>
             </Box>
 
-            {/* Main Content */}
+            {/* Content */}
             {loading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight={120}>
-                    <CircularProgress color="primary" size={28} />
-                    <Typography ml={2} color={SOFT_PRIMARY} fontSize={15}>
+                    <CircularProgress color="primary" size={32} />
+                    <Typography ml={2} color={SOFT_PRIMARY} fontSize={17}>
                         Đang tải...
                     </Typography>
                 </Box>
@@ -613,47 +539,47 @@ export default function AddressManager({ customerId }) {
                     className="fade-in"
                     sx={{
                         border: `2px dashed ${SOFT_PRIMARY}`,
-                        background: SOFT_BG,
-                        p: 5,
+                        background: SOFT_BG_GRADIENT,
+                        p: 6,
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
                         justifyContent: "center"
                     }}
                 >
-                    <PlaceIcon sx={{ fontSize: 48, color: SOFT_PRIMARY, mb: 2 }} />
-                    <Typography color="text.secondary" fontSize={16} textAlign="center">
+                    <PlaceIcon sx={{ fontSize: 56, color: SOFT_PRIMARY, mb: 2 }} />
+                    <Typography color="text.secondary" fontSize={18} textAlign="center">
                         Chưa có địa chỉ nào. Nhấn Thêm địa chỉ để bắt đầu.
                     </Typography>
                 </AnimatedCard>
             ) : (
-                <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
+                <Box display="flex" flexDirection="column" gap={2} mt={2}>
                     {addresses.map((address, idx) => (
                         <AnimatedCard
-                            onClick={() => chonDiaChi(address)}
                             key={address.id}
-                            elevation={address.trangThai === 1 ? 3 : 0}
+                            elevation={address.trangThai === 1 ? 6 : 2}
                             className="fade-in"
                             sx={{
                                 border:
                                     address.trangThai === 1
-                                        ? `1.5px solid #16a34a`
-                                        : `1.5px solid #e2e8f0`,
-                                background: address.trangThai === 1 ? "#f0fdf4" : "#fff"
+                                        ? `2px solid #16a34a`
+                                        : `2px solid #e0e7ef`,
+                                background: address.trangThai === 1 ? "rgba(34,197,94,0.09)" : "rgba(255,255,255,0.98)",
+                                position: "relative"
                             }}
                         >
                             <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
-                                <Box display="flex" alignItems="center" gap={1}>
+                                <Box display="flex" alignItems="center" gap={1.2}>
                                     <Typography
-                                        fontWeight={700}
-                                        fontSize={13.5}
-                                        color={address.trangThai === 1 ? "#16a34a" : "#333"}
+                                        fontWeight={800}
+                                        fontSize={16}
+                                        color={address.trangThai === 1 ? SOFT_GREEN : "#222"}
                                     >
                                         Địa chỉ {idx + 1}
                                     </Typography>
                                     {address.trangThai === 1 && (
                                         <GreenBadge
-                                            icon={<StarIcon sx={{ fontSize: 14, color: "#16a34a", mr: 0.5 }} />}
+                                            icon={<StarIcon sx={{ fontSize: 16, color: SOFT_GREEN, mr: 0.5 }} />}
                                             label="Mặc định"
                                             color="primary"
                                             size="small"
@@ -661,7 +587,7 @@ export default function AddressManager({ customerId }) {
                                         />
                                     )}
                                 </Box>
-                                <Box display="flex" alignItems="center" gap={1.5}>
+                                <Box display="flex" alignItems="center" gap={2}>
                                     {address.trangThai !== 1 && (
                                         <Tooltip title="Đặt làm mặc định">
                                             <span>
@@ -672,7 +598,7 @@ export default function AddressManager({ customerId }) {
                                                     onClick={() => openSetDefaultConfirm(address)}
                                                     className="set-default"
                                                 >
-                                                    <StarBorderIcon sx={{ fontSize: 17 }} />
+                                                    <StarBorderIcon sx={{ fontSize: 19 }} />
                                                 </SmallActionIconButton>
                                             </span>
                                         </Tooltip>
@@ -684,7 +610,7 @@ export default function AddressManager({ customerId }) {
                                             className="edit"
                                             onClick={() => handleEdit(address)}
                                         >
-                                            <EditOutlinedIcon sx={{ fontSize: 17 }} />
+                                            <EditOutlinedIcon sx={{ fontSize: 19 }} />
                                         </SmallActionIconButton>
                                     </Tooltip>
                                     <Tooltip title="Xóa địa chỉ">
@@ -695,13 +621,13 @@ export default function AddressManager({ customerId }) {
                                             className="delete"
                                             onClick={() => openDeleteConfirm(address)}
                                         >
-                                            <DeleteIcon sx={{ fontSize: 17 }} />
+                                            <DeleteIcon sx={{ fontSize: 19 }} />
                                         </SmallActionIconButton>
                                     </Tooltip>
                                 </Box>
                             </Box>
-                            <Typography fontWeight={600} fontSize={15.5} color="#333">
-                               {`${address.diaChiCuThe}, ${address.xaPhuong}, ${address.quanHuyen}, ${address.tinhThanhPho}`}
+                            <Typography fontWeight={700} fontSize={17} color="#222" mt={1}>
+                                {`${address.diaChiCuThe}, ${address.xaPhuong}, ${address.quanHuyen}, ${address.tinhThanhPho}`}
                             </Typography>
                         </AnimatedCard>
                     ))}
@@ -723,13 +649,13 @@ export default function AddressManager({ customerId }) {
                     <DialogTitle
                         sx={{
                             color: "#d32f2f",
-                            fontWeight: 600,
+                            fontWeight: 700,
                             display: "flex",
                             alignItems: "center",
                             gap: 1
                         }}
                     >
-                        <DeleteIcon sx={{ fontSize: 24 }} />
+                        <DeleteIcon sx={{ fontSize: 25 }} />
                         Xác nhận xóa địa chỉ mặc định
                     </DialogTitle>
                     <DialogContent>
@@ -737,17 +663,17 @@ export default function AddressManager({ customerId }) {
                             <Typography variant="body1" sx={{ mb: 2, color: "#666" }}>
                                 Bạn đang xóa địa chỉ mặc định. Vui lòng chọn một địa chỉ khác làm địa chỉ mặc định trước khi xóa.
                             </Typography>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#d32f2f", mb: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#d32f2f", mb: 1 }}>
                                 Địa chỉ sẽ bị xóa:
                             </Typography>
-                            <Paper sx={{ p: 2, bgcolor: "#fff3e0", border: "1px solid #ffb74d", borderRadius: 2 }}>
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            <Paper sx={{ p: 2, bgcolor: "#fff3e0", border: "1.5px solid #ffb74d", borderRadius: 2 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
                                     {addresses.find((a) => a.id === confirmDelete.addressId)?.tinhThanhPho},{" "}
                                     {addresses.find((a) => a.id === confirmDelete.addressId)?.xaPhuong}
                                 </Typography>
                             </Paper>
                         </Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#1976d2", mb: 2 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: SOFT_PRIMARY, mb: 2 }}>
                             Chọn địa chỉ mới làm mặc định:
                         </Typography>
                         <Box sx={{ maxHeight: 250, overflowY: "auto" }}>
@@ -760,31 +686,31 @@ export default function AddressManager({ customerId }) {
                                             p: 1.5,
                                             mb: 1,
                                             cursor: "pointer",
-                                            border: selectDefaultId === address.id ? "2px solid #1976d2" : "1px solid #e0e0e0",
-                                            bgcolor: selectDefaultId === address.id ? "#e3f2fd" : "#fff",
-                                            transition: "all 0.2s",
+                                            border: selectDefaultId === address.id ? "2px solid #2563eb" : "1.5px solid #e0e7ef",
+                                            bgcolor: selectDefaultId === address.id ? "#f4f8fe" : "#fff",
+                                            transition: "all 0.22s",
                                             "&:hover": {
-                                                borderColor: "#1976d2",
-                                                bgcolor: selectDefaultId === address.id ? "#e3f2fd" : "#f5f5f5"
+                                                borderColor: "#2563eb",
+                                                bgcolor: selectDefaultId === address.id ? "#f4f8fe" : "#f5f5f5"
                                             }
                                         }}
                                         onClick={() => setSelectDefaultId(address.id)}
                                     >
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ flex: 1 }}>
-                                                <Typography variant="body2" sx={{ fontWeight: 600, color: "#333" }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 700, color: "#222" }}>
                                                     Địa chỉ {index + 1}
                                                 </Typography>
-                                                <Typography variant="body2" sx={{ color: "#666", mt: 0.5, fontSize: "0.875rem" }}>
+                                                <Typography variant="body2" sx={{ color: "#666", mt: 0.5, fontSize: "0.95rem" }}>
                                                     {address.tinhThanhPho}, {address.xaPhuong}
                                                 </Typography>
                                             </Box>
                                             {selectDefaultId === address.id && (
                                                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: 1 }}>
-                                                    <StarIcon sx={{ fontSize: 18, color: "#1976d2" }} />
+                                                    <StarIcon sx={{ fontSize: 18, color: SOFT_PRIMARY }} />
                                                     <Typography
                                                         variant="caption"
-                                                        sx={{ color: "#1976d2", fontWeight: 600, fontSize: "0.75rem" }}
+                                                        sx={{ color: SOFT_PRIMARY, fontWeight: 700, fontSize: "0.8rem" }}
                                                     >
                                                         Mặc định
                                                     </Typography>
@@ -795,7 +721,7 @@ export default function AddressManager({ customerId }) {
                                 ))}
                         </Box>
                         {!selectDefaultId && (
-                            <Typography variant="caption" sx={{ color: "#d32f2f", mt: 1, display: "block" }}>
+                            <Typography variant="caption" sx={{ color: "#d32f2f", mt: 1, display: "block", fontWeight: 700 }}>
                                 ⚠️ Vui lòng chọn một địa chỉ làm mặc định
                             </Typography>
                         )}
@@ -809,7 +735,7 @@ export default function AddressManager({ customerId }) {
                             variant="outlined"
                             sx={{
                                 minWidth: 80,
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 borderColor: "#bdbdbd",
                                 color: "#757575",
                                 "&:hover": {
@@ -826,7 +752,7 @@ export default function AddressManager({ customerId }) {
                             variant="contained"
                             color="error"
                             startIcon={<DeleteIcon />}
-                            sx={{ minWidth: 160, fontWeight: 600 }}
+                            sx={{ minWidth: 170, fontWeight: 700 }}
                         >
                             Xóa & Thiết lập mặc định
                         </Button>
@@ -846,7 +772,7 @@ export default function AddressManager({ customerId }) {
                             onClick={() => setConfirmDelete(null)}
                             variant="outlined"
                             sx={{
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 borderColor: "#bdbdbd",
                                 color: "#757575",
                                 "&:hover": {
@@ -861,7 +787,7 @@ export default function AddressManager({ customerId }) {
                             onClick={() => doDelete(confirmDelete.addressId)}
                             color="error"
                             variant="contained"
-                            sx={{ fontWeight: 600 }}
+                            sx={{ fontWeight: 700 }}
                         >
                             Xóa
                         </Button>
@@ -874,14 +800,14 @@ export default function AddressManager({ customerId }) {
                 <Dialog open onClose={closeConfirmDialog} maxWidth="sm" fullWidth>
                     <DialogTitle
                         sx={{
-                            color: confirmDialog.confirmColor === "error" ? "#d32f2f" : "#1976d2",
-                            fontWeight: 600
+                            color: confirmDialog.confirmColor === "error" ? "#d32f2f" : SOFT_PRIMARY,
+                            fontWeight: 700
                         }}
                     >
                         {confirmDialog.title}
                     </DialogTitle>
                     <DialogContent>
-                        <Typography sx={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>
+                        <Typography sx={{ whiteSpace: "pre-line", lineHeight: 1.7, fontWeight: 700 }}>
                             {confirmDialog.message}
                         </Typography>
                     </DialogContent>
@@ -891,7 +817,7 @@ export default function AddressManager({ customerId }) {
                             variant="outlined"
                             sx={{
                                 minWidth: 100,
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 borderColor: "#bdbdbd",
                                 color: "#757575",
                                 "&:hover": {
@@ -906,7 +832,7 @@ export default function AddressManager({ customerId }) {
                             onClick={handleConfirmAction}
                             variant="contained"
                             color={confirmDialog.confirmColor}
-                            sx={{ minWidth: 120, fontWeight: 600 }}
+                            sx={{ minWidth: 120, fontWeight: 700 }}
                         >
                             {confirmDialog.confirmText}
                         </Button>
