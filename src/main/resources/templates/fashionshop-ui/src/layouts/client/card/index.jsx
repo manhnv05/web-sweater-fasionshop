@@ -273,113 +273,106 @@ useEffect(() => {
   };
 
   // Change quantity (API)
-  const changeQty = async (id, val) => {
-    const item = cart.find((i) => i.id === id);
-    if (!item) return;
-     const originalQty = item.qty;
-    const newQty = Math.max(1, item.qty + val);
-    if (val > 0 && (item.qty + val) > item.soLuongTon) {
-        toast.warn(`Số lượng đã đạt tối đa là ${item.soLuongTon}!`);
-        return; // Dừng lại nếu vượt quá tồn kho
-    }
-    try {
-      let res;
-      if (user && user.id && user.role) {
-        // DB API
-        res = await axios.put(
-          `http://localhost:8080/api/v1/cart/db/update-quantity?idNguoiDung=${user.id}&loaiNguoiDung=${user.role}`,
-          { chiTietSanPhamId: id, soLuong: newQty },
-          { withCredentials: true }
-        );
-      } else {
-        // Redis API
-        res = await axios.put(`http://localhost:8080/api/v1/cart/update-quantity`, {
-          cartId: cartId,
-          chiTietSanPhamId: id,
-          soLuong: newQty,
-        });
-      }
-      const actualQty =
-        res.data && typeof res.data.soLuong === "number" ? res.data.soLuong : newQty;
-      setCart((prev) => {
-        const next = prev.map((item) => (item.id === id ? { ...item, qty: actualQty } : item));
-        updateCartBadge(next);
-        return next;
-      });
-  } catch (err) {
-      // --- XỬ LÝ LỖI Ở ĐÂY ---
-      const errorMessage = err.response?.data?.message || "Cập nhật số lượng thất bại!";
-      toast.error(errorMessage); // <-- Hiển thị toast lỗi
-
-      // Khôi phục lại số lượng ban đầu trên giao diện vì API đã thất bại
-      setCart((prev) => {
-        const next = prev.map((item) => (item.id === id ? { ...item, qty: originalQty } : item));
-        updateCartBadge(next);
-        return next;
-      });
-    }
-  };
-const handleQtyInputChange = (id, value) => {
-  // Chuyển giá trị nhập vào thành số, nếu rỗng thì coi là 0
-  const newQty = value === "" ? 0 : parseInt(value, 10);
-
-  // Chỉ cập nhật nếu là số hợp lệ
-  if (!isNaN(newQty)) {
-    setCart((prev) => {
-      const next = prev.map((item) =>
-        item.id === id ? { ...item, qty: newQty } : item
-      );
-      // Không cần gọi updateCartBadge ở đây để tránh giật lag, sẽ gọi khi blur
-      return next;
-    });
-  }
-};
+    const changeQty = async (id, val) => {
+        const item = cart.find((i) => i.id === id);
+        if (!item) return;
+        const originalQty = item.qty;
+        // GIỚI HẠN: nhỏ nhất là 1, lớn nhất là min(100, tồn kho)
+        const maxQty = Math.min(item.soLuongTon ?? 100, 100);
+        const newQty = Math.max(1, Math.min(item.qty + val, maxQty));
+        if (val > 0 && (item.qty + val) > maxQty) {
+            toast.warn(`Số lượng đã đạt tối đa là ${maxQty}!`);
+            return;
+        }
+        try {
+            let res;
+            if (user && user.id && user.role) {
+                // DB API
+                res = await axios.put(
+                    `http://localhost:8080/api/v1/cart/db/update-quantity?idNguoiDung=${user.id}&loaiNguoiDung=${user.role}`,
+                    { chiTietSanPhamId: id, soLuong: newQty },
+                    { withCredentials: true }
+                );
+            } else {
+                // Redis API
+                res = await axios.put(`http://localhost:8080/api/v1/cart/update-quantity`, {
+                    cartId: cartId,
+                    chiTietSanPhamId: id,
+                    soLuong: newQty,
+                });
+            }
+            const actualQty =
+                res.data && typeof res.data.soLuong === "number" ? res.data.soLuong : newQty;
+            setCart((prev) => {
+                const next = prev.map((item) => (item.id === id ? { ...item, qty: actualQty } : item));
+                updateCartBadge(next);
+                return next;
+            });
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || "Cập nhật số lượng thất bại!";
+            toast.error(errorMessage);
+            setCart((prev) => {
+                const next = prev.map((item) => (item.id === id ? { ...item, qty: originalQty } : item));
+                updateCartBadge(next);
+                return next;
+            });
+        }
+    };
+    const handleQtyInputChange = (id, value) => {
+        // Chuyển giá trị nhập vào thành số, nếu rỗng thì coi là 0
+        let newQty = value === "" ? 0 : parseInt(value, 10);
+        const item = cart.find((i) => i.id === id);
+        if (!item) return;
+        const maxQty = Math.min(item.soLuongTon ?? 100, 100);
+        if (newQty > maxQty) newQty = maxQty;
+        if (newQty < 1) newQty = 1;
+        if (!isNaN(newQty)) {
+            setCart((prev) => {
+                const next = prev.map((item) =>
+                    item.id === id ? { ...item, qty: newQty } : item
+                );
+                return next;
+            });
+        }
+    };
 
 // Gửi yêu cầu API để cập nhật số lượng khi người dùng hoàn tất việc nhập (blur)
-const handleQtyUpdateOnBlur = async (id) => {
-  const item = cart.find((i) => i.id === id);
-  if (!item) return;
-
-  // Validate: số lượng phải ít nhất là 1
-  let  finalQty = Math.max(1, item.qty || 1);
-if (finalQty > item.soLuongTon) {
-        toast.warn(`Số lượng đã được điều chỉnh về mức tối đa là ${item.soLuongTon}.`);
-        finalQty = item.soLuongTon; // Giới hạn số lượng bằng số lượng tồn
-    }
-  try {
-    let res;
-    if (user && user.id && user.role) {
-      // DB API
-      res = await axios.put(
-        `http://localhost:8080/api/v1/cart/db/update-quantity?idNguoiDung=${user.id}&loaiNguoiDung=${user.role}`,
-        { chiTietSanPhamId: id, soLuong: finalQty },
-        { withCredentials: true }
-      );
-    } else {
-      // Redis API
-      res = await axios.put(`http://localhost:8080/api/v1/cart/update-quantity`, {
-        cartId: cartId,
-        chiTietSanPhamId: id,
-        soLuong: finalQty,
-      });
-    }
-
-    const actualQty =
-      res.data && typeof res.data.soLuong === "number" ? res.data.soLuong : finalQty;
-
-    // Cập nhật lại state với số lượng chính xác từ server (hoặc số lượng đã validate)
-    setCart((prev) => {
-      const next = prev.map((item) =>
-        item.id === id ? { ...item, qty: actualQty } : item
-      );
-      updateCartBadge(next); // Cập nhật badge ở đây
-      return next;
-    });
-  } catch (err) {
-    // Xử lý lỗi nếu cần, ví dụ: hiển thị lại số lượng cũ
-    console.error("Failed to update quantity:", err);
-  }
-};
+    const handleQtyUpdateOnBlur = async (id) => {
+        const item = cart.find((i) => i.id === id);
+        if (!item) return;
+        const maxQty = Math.min(item.soLuongTon ?? 100, 100);
+        let finalQty = Math.max(1, Math.min(item.qty || 1, maxQty));
+        if (item.qty !== finalQty) {
+            toast.warn(`Số lượng tự động điều chỉnh về ${finalQty}!`);
+        }
+        try {
+            let res;
+            if (user && user.id && user.role) {
+                res = await axios.put(
+                    `http://localhost:8080/api/v1/cart/db/update-quantity?idNguoiDung=${user.id}&loaiNguoiDung=${user.role}`,
+                    { chiTietSanPhamId: id, soLuong: finalQty },
+                    { withCredentials: true }
+                );
+            } else {
+                res = await axios.put(`http://localhost:8080/api/v1/cart/update-quantity`, {
+                    cartId: cartId,
+                    chiTietSanPhamId: id,
+                    soLuong: finalQty,
+                });
+            }
+            const actualQty =
+                res.data && typeof res.data.soLuong === "number" ? res.data.soLuong : finalQty;
+            setCart((prev) => {
+                const next = prev.map((item) =>
+                    item.id === id ? { ...item, qty: actualQty } : item
+                );
+                updateCartBadge(next);
+                return next;
+            });
+        } catch (err) {
+            console.error("Failed to update quantity:", err);
+        }
+    };
   // Listen to realtime cart badge update event (from other tabs/windows)
   useEffect(() => {
     function handleCartUpdated(e) {
@@ -658,77 +651,76 @@ if (finalQty > item.soLuongTon) {
                     </Stack>
                   </Box>
                   {/* Quantity group with - num + */}
-                  <Stack spacing={0.7} alignItems="center" sx={{ minWidth: 112 }}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <IconButton
-                        size="small"
-                        sx={{
-                          border: "1.5px solid #bde0fe",
-                          color: "#1976d2",
-                          bgcolor: "#e3f0fa",
-                          "&:hover": { bgcolor: "#d1eaff", borderColor: "#1976d2" },
-                        }}
-                        onClick={() => changeQty(item.id, -1)}
-                        disabled={item.qty <= 1}
-                      >
-                        <RemoveIcon fontSize="small" />
-                      </IconButton>
-                     <TextField
-  type="number"
-  value={item.qty}
-  onChange={(e) => handleQtyInputChange(item.id, e.target.value)}
-  onBlur={() => handleQtyUpdateOnBlur(item.id)}
-  size="small"
-  inputProps={{
-    min: 1,
-    style: {
-      textAlign: "center",
-      fontWeight: 700,
-      color: "#1976d2",
-      padding: "8px 0", // Điều chỉnh padding cho cân đối
-    },
-  }}
-  sx={{
-    width: 100, // Tăng nhẹ chiều rộng để vừa vặn hơn
-    mx: 0.5,
-    "& .MuiOutlinedInput-root": {
-      borderRadius: 1.2,
-      background: "#fff",
-      "& fieldset": {
-        borderColor: "#bde0fe",
-        borderWidth: "1.5px",
-      },
-      "&:hover fieldset": {
-        borderColor: "#1976d2",
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "#1976d2",
-      },
-    },
-    // Ẩn các nút tăng/giảm mặc định của trình duyệt
-    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-      display: "none",
-    },
-    "& input[type=number]": {
-      MozAppearance: "textfield",
-    },
-  }}
-/>
-                      <IconButton
-                        size="small"
-                        sx={{
-                          border: "1.5px solid #bde0fe",
-                          color: "#1976d2",
-                          bgcolor: "#e3f0fa",
-                          "&:hover": { bgcolor: "#d1eaff", borderColor: "#1976d2" },
-                        }}
-                        onClick={() => changeQty(item.id, 1)}
-                        disabled={item.qty >= item.soLuongTon}
-                      >
-                        
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
+                    <Stack spacing={0.7} alignItems="center" sx={{ minWidth: 112 }}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                            <IconButton
+                                size="small"
+                                sx={{
+                                    border: "1.5px solid #bde0fe",
+                                    color: "#1976d2",
+                                    bgcolor: "#e3f0fa",
+                                    "&:hover": { bgcolor: "#d1eaff", borderColor: "#1976d2" },
+                                }}
+                                onClick={() => changeQty(item.id, -1)}
+                                disabled={item.qty <= 1}
+                            >
+                                <RemoveIcon fontSize="small" />
+                            </IconButton>
+                            <TextField
+                                type="number"
+                                value={item.qty}
+                                onChange={(e) => handleQtyInputChange(item.id, e.target.value)}
+                                onBlur={() => handleQtyUpdateOnBlur(item.id)}
+                                size="small"
+                                inputProps={{
+                                    min: 1,
+                                    max: Math.min(item.soLuongTon ?? 100, 100), // max là 100 hoặc tồn kho, lấy nhỏ nhất
+                                    style: {
+                                        textAlign: "center",
+                                        fontWeight: 700,
+                                        color: "#1976d2",
+                                        padding: "8px 0",
+                                    },
+                                }}
+                                sx={{
+                                    width: 100,
+                                    mx: 0.5,
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 1.2,
+                                        background: "#fff",
+                                        "& fieldset": {
+                                            borderColor: "#bde0fe",
+                                            borderWidth: "1.5px",
+                                        },
+                                        "&:hover fieldset": {
+                                            borderColor: "#1976d2",
+                                        },
+                                        "&.Mui-focused fieldset": {
+                                            borderColor: "#1976d2",
+                                        },
+                                    },
+                                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                                        display: "none",
+                                    },
+                                    "& input[type=number]": {
+                                        MozAppearance: "textfield",
+                                    },
+                                }}
+                            />
+                            <IconButton
+                                size="small"
+                                sx={{
+                                    border: "1.5px solid #bde0fe",
+                                    color: "#1976d2",
+                                    bgcolor: "#e3f0fa",
+                                    "&:hover": { bgcolor: "#d1eaff", borderColor: "#1976d2" },
+                                }}
+                                onClick={() => changeQty(item.id, 1)}
+                                disabled={item.qty >= Math.min(item.soLuongTon ?? 100, 100)}
+                            >
+                                <AddIcon fontSize="small" />
+                            </IconButton>
+                        </Stack>
                    
                    
                     <IconButton
