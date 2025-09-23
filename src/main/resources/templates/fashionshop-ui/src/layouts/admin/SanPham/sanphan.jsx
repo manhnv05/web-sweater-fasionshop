@@ -130,6 +130,7 @@ function ProductTable() {
         xuatXu: "",
         trangThai: 1,
         idDanhMuc: "",
+        moTa: "",
     });
     const [editFormErrors, setEditFormErrors] = useState({});
     const [editSaving, setEditSaving] = useState(false);
@@ -291,6 +292,7 @@ function ProductTable() {
                 xuatXu: detail.xuatXu || "",
                 trangThai: detail.trangThai !== undefined ? detail.trangThai : 1,
                 idDanhMuc: detail.idDanhMuc ? String(detail.idDanhMuc) : (detail.danhMuc && detail.danhMuc.id ? String(detail.danhMuc.id) : ""),
+                moTa: detail.moTa || "",
             });
         } catch (error) {
             setEditForm({
@@ -299,6 +301,7 @@ function ProductTable() {
                 xuatXu: product.xuatXu || "",
                 trangThai: product.trangThai !== undefined ? product.trangThai : 1,
                 idDanhMuc: product.idDanhMuc ? String(product.idDanhMuc) : "",
+                moTa: product.moTa || "",
             });
         }
         setEditModalOpen(true);
@@ -313,6 +316,7 @@ function ProductTable() {
             xuatXu: "",
             trangThai: 1,
             idDanhMuc: "",
+            moTa: "",
         });
         setEditFormErrors({});
     }
@@ -342,6 +346,7 @@ function ProductTable() {
                 xuatXu: editForm.xuatXu,
                 trangThai: editForm.trangThai,
                 idDanhMuc: editForm.idDanhMuc,
+                moTa: editForm.moTa,
             },{ withCredentials: true });
             handleEditClose();
             toast.success("Cập nhật sản phẩm thành công!");
@@ -725,6 +730,24 @@ function ProductTable() {
                                     {editFormErrors.idDanhMuc}
                                 </Box>
                             )}
+                        </Box>
+                        <Box>
+                            <Typography fontWeight={700} marginBottom={0.5} color="#1769aa">
+                                Mô tả
+                            </Typography>
+                            <TextField
+                                value={editForm.moTa}
+                                name="moTa"
+                                onChange={handleEditChange}
+                                fullWidth
+                                size="small"
+                                placeholder="Nhập mô tả"
+                                multiline
+                                minRows={3}
+                                sx={{ background: "#fff", borderRadius: 2 }}
+                                error={!!editFormErrors.moTa}
+                                helperText={editFormErrors.moTa}
+                            />
                         </Box>
                         <Box>
                             <Typography fontWeight={700} marginBottom={0.5} color="#1769aa">
