@@ -1,10 +1,13 @@
 package com.example.datn.service;
 
+import com.example.datn.dto.TayAoDTO;
 import com.example.datn.dto.ThuongHieuDTO;
+import com.example.datn.entity.TayAo;
 import com.example.datn.entity.ThuongHieu;
 import com.example.datn.exception.AppException;
 import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.ThuongHieuRepository;
+import com.example.datn.vo.tayAoVO.TayAoVO;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuQueryVO;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuUpdateVO;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuVO;
@@ -23,14 +26,39 @@ public class ThuongHieuService {
     @Autowired
     private ThuongHieuRepository thuongHieuRepository;
 
-    public Integer save(ThuongHieuVO vO) {
-        ThuongHieu entity = new ThuongHieu();
-        if (thuongHieuRepository.existsThuongHieuByTenThuongHieu(vO.getTenThuongHieu())) {
+    public ThuongHieuDTO save(ThuongHieuVO vO) {
+        // Kiểm tra trống
+        if (vO.getTenThuongHieu() == null || vO.getTenThuongHieu().trim().isEmpty()) {
+            throw new AppException(ErrorCode.THUONGHIEU_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenThuongHieu().length() > 50) {
+            throw new AppException(ErrorCode.THUONGHIEU_NAME_TOO_LONG,
+                    ErrorCode.THUONGHIEU_NAME_TOO_LONG.getErrorMessage(50));
+        }
+        // Kiểm tra trùng tên
+        if (thuongHieuRepository.existsByTenThuongHieu(vO.getTenThuongHieu().trim())) {
+            throw new AppException(ErrorCode.THUONGHIEU_NAME_DUPLICATE);
+        }
+
+        Integer maxCode = thuongHieuRepository.findMaxMaThuongHieuCode();
+        int nextCode = (maxCode != null ? maxCode : 0) + 1;
+        String maThuongHieu = String.format("TH%04d", nextCode);
+
+        ThuongHieu bean = new ThuongHieu();
+
+        if ( thuongHieuRepository.existsByTenThuongHieu(vO.getTenThuongHieu())){
             throw new AppException(ErrorCode.THE_BRAND_ALREADY_EXISTS);
         }
-        BeanUtils.copyProperties(vO, entity);
-        entity = thuongHieuRepository.save(entity);
-        return entity.getId();
+        BeanUtils.copyProperties(vO, bean);
+        bean.setMaThuongHieu(maThuongHieu);
+        bean.setTrangThai(1);
+        bean = thuongHieuRepository.save(bean);
+
+        // Trả về DTO luôn, hoặc nếu muốn trả về id thì return bean.getId();
+        ThuongHieuDTO dto = new ThuongHieuDTO();
+        BeanUtils.copyProperties(bean, dto);
+        return dto;
     }
 
     public void delete(Integer id) {
@@ -38,9 +66,24 @@ public class ThuongHieuService {
     }
 
     public void update(Integer id, ThuongHieuUpdateVO vO) {
-        ThuongHieu entity = requireOne(id);
-        BeanUtils.copyProperties(vO, entity);
-        thuongHieuRepository.save(entity);
+        ThuongHieu bean = requireOne(id);
+        // Kiểm tra trống
+        if (vO.getTenThuongHieu() == null || vO.getTenThuongHieu().trim().isEmpty()) {
+            throw new AppException(ErrorCode.THUONGHIEU_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenThuongHieu().length() > 50) {
+            throw new AppException(ErrorCode.THUONGHIEU_NAME_TOO_LONG,
+                    String.format(ErrorCode.THUONGHIEU_NAME_TOO_LONG.getErrorMessage(), 50));
+        }
+        // Kiểm tra trùng tên (trừ chính bản ghi đang sửa)
+        String newName = vO.getTenThuongHieu().trim();
+        if (thuongHieuRepository.existsByTenThuongHieu(newName)
+                && !bean.getTenThuongHieu().equalsIgnoreCase(newName)) {
+            throw new AppException(ErrorCode.THUONGHIEU_NAME_DUPLICATE);
+        }
+        BeanUtils.copyProperties(vO, bean);
+        thuongHieuRepository.save(bean);
     }
 
     public ThuongHieuDTO getById(Integer id) {

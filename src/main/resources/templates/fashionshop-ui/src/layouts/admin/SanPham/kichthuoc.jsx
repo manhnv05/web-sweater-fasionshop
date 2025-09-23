@@ -30,25 +30,6 @@ const viewOptions = [5, 10, 20];
 const getTrangThaiText = (val) =>
     val === 1 || val === "1" || val === "Hiển thị" ? "Hiển thị" : "Ẩn";
 
-function generateMaKichThuoc(existingList = []) {
-    const numbers = existingList
-        .map((item) => {
-            const match = /^SZ(\d{4})$/.exec(item.ma || "");
-            return match ? parseInt(match[1], 10) : null;
-        })
-        .filter((num) => num !== null)
-        .sort((a, b) => a - b);
-    let next = 1;
-    for (let i = 0; i < numbers.length; i++) {
-        if (numbers[i] !== i + 1) {
-            next = i + 1;
-            break;
-        }
-        next = numbers.length + 1;
-    }
-    return "SZ" + String(next).padStart(4, "0");
-}
-
 function getPaginationItems(current, total) {
     if (total <= 5) return Array.from({ length: total }, (_, i) => i);
     if (current <= 1) return [0, 1, "...", total - 2, total - 1];
@@ -84,19 +65,7 @@ function SizeTable() {
     const [editSize, setEditSize] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
 
-    const [deleteId, setDeleteId] = useState(null);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-    const [anchorEl, setAnchorEl] = useState(null);
-
-    useEffect(() => {
-        if (showModal && sizesData.content) {
-            setNewSize((prev) => ({
-                ...prev,
-                ma: generateMaKichThuoc(sizesData.content),
-            }));
-        }
-    }, [showModal, sizesData.content]);
 
     useEffect(() => {
         setLoading(true);
@@ -134,24 +103,24 @@ function SizeTable() {
             }),
             credentials: "include",
         })
-           .then(async (res) => {
-        let responseBody;
+            .then(async (res) => {
+                let responseBody;
 
-        try {
-          responseBody = await res.json(); // 👈 Đọc body JSON
-        } catch (err) {
-          throw new Error("Không thể đọc phản hồi từ server");
-        }
-        
-        if (!res.ok) {
-          // 👇 Lấy message từ các trường phù hợp
-            let message =
-            responseBody?.errors?.tenKichThuoc || responseBody?.message || "Lỗi không xác định";
-                throw new Error(message);
-            }
+                try {
+                    responseBody = await res.json(); // 👈 Đọc body JSON
+                } catch (err) {
+                    throw new Error("Không thể đọc phản hồi từ server");
+                }
 
-        return responseBody;
-      })
+                if (!res.ok) {
+                    // 👇 Lấy message từ các trường phù hợp
+                    let message =
+                        responseBody?.errors?.tenKichThuoc || responseBody?.message || "Lỗi không xác định";
+                    throw new Error(message);
+                }
+
+                return responseBody;
+            })
             .then(() => {
                 setShowModal(false);
                 setNewSize({ ma: "", tenKichCo: "", trangThai: "Hiển thị" });
@@ -293,16 +262,6 @@ function SizeTable() {
                         value={newSize.tenKichCo}
                         onChange={(e) => setNewSize({ ...newSize, tenKichCo: e.target.value })}
                     />
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Select
-                        value={newSize.trangThai}
-                        onChange={(e) => setNewSize({ ...newSize, trangThai: e.target.value })}
-                        size="small"
-                    >
-                        <MenuItem value="Hiển thị">Hiển thị</MenuItem>
-                        <MenuItem value="Ẩn">Ẩn</MenuItem>
-                    </Select>
                 </FormControl>
             </DialogContent>
             <DialogActions>
@@ -447,11 +406,6 @@ function SizeTable() {
                     </SoftBox>
                 </Card>
                 <Card sx={{ p: { xs: 2, md: 3 }, mb: 2 }}>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
                     <SoftBox>
                         <Table columns={columns} rows={rows} loading={loading} />
                     </SoftBox>

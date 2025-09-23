@@ -1,6 +1,7 @@
 package com.example.datn.service;
 
 import com.example.datn.dto.ChatLieuDTO;
+import com.example.datn.dto.PhieuGiamGiaDTO;
 import com.example.datn.entity.ChatLieu;
 import com.example.datn.exception.AppException;
 import com.example.datn.exception.ErrorCode;
@@ -20,7 +21,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,15 +33,39 @@ public class ChatLieuService {
             @CacheEvict(value = "chatLieu", allEntries = true),
             @CacheEvict(value = "chatLieuPage", allEntries = true)
     })
-    public Integer save(ChatLieuVO vO) {
+    public ChatLieuDTO save(ChatLieuVO vO) {
+        // Kiểm tra trống
+        if (vO.getTenChatLieu() == null || vO.getTenChatLieu().trim().isEmpty()) {
+            throw new AppException(ErrorCode.CHATLIEU_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenChatLieu().length() > 50) {
+            throw new AppException(ErrorCode.CHATLIEU_NAME_TOO_LONG,
+                    ErrorCode.CHATLIEU_NAME_TOO_LONG.getErrorMessage(50));
+        }
+        // Kiểm tra trùng tên
+        if (chatLieuRepository.existsByTenChatLieu(vO.getTenChatLieu().trim())) {
+            throw new AppException(ErrorCode.CHATLIEU_NAME_DUPLICATE);
+        }
+
+        Integer maxCode = chatLieuRepository.findMaxMaChatLieuCode();
+        int nextCode = (maxCode != null ? maxCode : 0) + 1;
+        String maChatLieu = String.format("CL%04d", nextCode);
+
         ChatLieu bean = new ChatLieu();
 
         if ( chatLieuRepository.existsByTenChatLieu(vO.getTenChatLieu())){
             throw new AppException(ErrorCode.THE_material_ALREADY_EXISTS);
         }
         BeanUtils.copyProperties(vO, bean);
+        bean.setMaChatLieu(maChatLieu);
+        bean.setTrangThai(1);
         bean = chatLieuRepository.save(bean);
-        return bean.getId();
+
+        // Trả về DTO luôn, hoặc nếu muốn trả về id thì return bean.getId();
+        ChatLieuDTO dto = new ChatLieuDTO();
+        BeanUtils.copyProperties(bean, dto);
+        return dto;
     }
 
     @Caching(evict = {
@@ -49,6 +73,9 @@ public class ChatLieuService {
             @CacheEvict(value = "chatLieuPage", allEntries = true)
     })
     public void delete(Integer id) {
+        if (!chatLieuRepository.existsById(id)) {
+            throw new AppException(ErrorCode.CHATLIEU_NOT_FOUND);
+        }
         chatLieuRepository.deleteById(id);
     }
 
@@ -58,6 +85,21 @@ public class ChatLieuService {
     })
     public void update(Integer id, ChatLieuUpdateVO vO) {
         ChatLieu bean = requireOne(id);
+        // Kiểm tra trống
+        if (vO.getTenChatLieu() == null || vO.getTenChatLieu().trim().isEmpty()) {
+            throw new AppException(ErrorCode.CHATLIEU_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenChatLieu().length() > 50) {
+            throw new AppException(ErrorCode.CHATLIEU_NAME_TOO_LONG,
+                    String.format(ErrorCode.CHATLIEU_NAME_TOO_LONG.getErrorMessage(), 50));
+        }
+        // Kiểm tra trùng tên (trừ chính bản ghi đang sửa)
+        String newName = vO.getTenChatLieu().trim();
+        if (chatLieuRepository.existsByTenChatLieu(newName)
+                && !bean.getTenChatLieu().equalsIgnoreCase(newName)) {
+            throw new AppException(ErrorCode.CHATLIEU_NAME_DUPLICATE);
+        }
         BeanUtils.copyProperties(vO, bean);
         chatLieuRepository.save(bean);
     }
@@ -111,6 +153,6 @@ public class ChatLieuService {
 
     private ChatLieu requireOne(Integer id) {
         return chatLieuRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Resource not found: " + id));
+                .orElseThrow(() -> new AppException(ErrorCode.CHATLIEU_NOT_FOUND));
     }
 }

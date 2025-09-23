@@ -28,211 +28,165 @@ const statusList = ["Tất cả", "Hiển thị", "Ẩn"];
 const viewOptions = [5, 10, 20];
 
 const getTrangThaiText = (val) =>
-  val === 1 || val === "1" || val === "Hiển thị" ? "Hiển thị" : "Ẩn";
+    val === 1 || val === "1" || val === "Hiển thị" ? "Hiển thị" : "Ẩn";
 
-function generateMaThuongHieu(existingList = []) {
-  const numbers = existingList
-    .map((item) => {
-      const match = /^TH(\d{4})$/.exec(item.maThuongHieu || "");
-      return match ? parseInt(match[1], 10) : null;
-    })
-    .filter((num) => num !== null)
-    .sort((a, b) => a - b);
-  let next = 1;
-  for (let i = 0; i < numbers.length; i++) {
-    if (numbers[i] !== i + 1) {
-      next = i + 1;
-      break;
-    }
-    next = numbers.length + 1;
-  }
-  return "TH" + String(next).padStart(4, "0");
-}
 
 function getPaginationItems(current, total) {
-  if (total <= 5) return Array.from({ length: total }, (_, i) => i);
-  if (current <= 1) return [0, 1, "...", total - 2, total - 1];
-  if (current >= total - 2) return [0, 1, "...", total - 2, total - 1];
-  return [0, 1, "...", current, "...", total - 2, total - 1];
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i);
+    if (current <= 1) return [0, 1, "...", total - 2, total - 1];
+    if (current >= total - 2) return [0, 1, "...", total - 2, total - 1];
+    return [0, 1, "...", current, "...", total - 2, total - 1];
 }
 
 function BrandTable() {
-  const [queryParams, setQueryParams] = useState({
-    tenThuongHieu: "",
-    trangThai: "Tất cả",
-    page: 0,
-    size: 5,
-  });
+    const [queryParams, setQueryParams] = useState({
+        tenThuongHieu: "",
+        trangThai: "Tất cả",
+        page: 0,
+        size: 5,
+    });
 
-  const [brandsData, setBrandsData] = useState({
-    content: [],
-    totalPages: 1,
-    number: 0,
-    first: true,
-    last: true,
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+    const [brandsData, setBrandsData] = useState({
+        content: [],
+        totalPages: 1,
+        number: 0,
+        first: true,
+        last: true,
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-  const [showModal, setShowModal] = useState(false);
-  const [newBrand, setNewBrand] = useState({
-    maThuongHieu: "",
-    tenThuongHieu: "",
-    trangThai: "Hiển thị",
-  });
+    const [showModal, setShowModal] = useState(false);
+    const [newBrand, setNewBrand] = useState({
+        maThuongHieu: "",
+        tenThuongHieu: "",
+        trangThai: "Hiển thị",
+    });
 
-  const [editBrand, setEditBrand] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
+    const [editBrand, setEditBrand] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
 
 
     const [anchorEl, setAnchorEl] = useState(null);
 
 
-  useEffect(() => {
-    if (showModal && brandsData.content) {
-      setNewBrand((prev) => ({
-        ...prev,
-        maThuongHieu: generateMaThuongHieu(brandsData.content),
-      }));
-    }
-  }, [showModal, brandsData.content]);
+    useEffect(() => {
+        setLoading(true);
+        setError("");
+        let url = `http://localhost:8080/thuongHieu?page=${queryParams.page}&size=${queryParams.size}`;
+        if (queryParams.tenThuongHieu)
+            url += `&tenThuongHieu=${encodeURIComponent(queryParams.tenThuongHieu)}`;
+        if (queryParams.trangThai !== "Tất cả")
+            url += `&trangThai=${queryParams.trangThai === "Hiển thị" ? 1 : 0}`;
 
-  useEffect(() => {
-    setLoading(true);
-    setError("");
-    let url = `http://localhost:8080/thuongHieu?page=${queryParams.page}&size=${queryParams.size}`;
-    if (queryParams.tenThuongHieu)
-      url += `&tenThuongHieu=${encodeURIComponent(queryParams.tenThuongHieu)}`;
-    if (queryParams.trangThai !== "Tất cả")
-      url += `&trangThai=${queryParams.trangThai === "Hiển thị" ? 1 : 0}`;
+        fetch(url, {
+            credentials: "include", // <-- THÊM DÒNG NÀY để gửi cookie JSESSIONID/session
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Lỗi khi tải dữ liệu thương hiệu");
+                return res.json();
+            })
+            .then((data) => setBrandsData(data))
+            .catch((err) => setError(err.message || "Lỗi không xác định"))
+            .finally(() => setLoading(false));
+    }, [queryParams]);
 
-    fetch(url, {
-      credentials: "include", // <-- THÊM DÒNG NÀY để gửi cookie JSESSIONID/session
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Lỗi khi tải dữ liệu thương hiệu");
-        return res.json();
-      })
-      .then((data) => setBrandsData(data))
-      .catch((err) => setError(err.message || "Lỗi không xác định"))
-      .finally(() => setLoading(false));
-  }, [queryParams]);
-
-  const handleAddBrand = () => {
-    if (!newBrand.tenThuongHieu) {
-      toast.error("Tên thương hiệu không được để trống");
-      return;
-    }
-    setLoading(true);
-    fetch("http://localhost:8080/thuongHieu", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...newBrand,
-        trangThai: newBrand.trangThai === "Hiển thị" ? 1 : 0,
-      }),
-      credentials: "include",
-    })
-      .then(async (res) => {
-        let responseBody;
-
-        try {
-          responseBody = await res.json(); // 👈 Đọc body JSON
-        } catch (err) {
-          throw new Error("Không thể đọc phản hồi từ server");
+    const handleAddBrand = () => {
+        if (!newBrand.tenThuongHieu) {
+            toast.error("Tên thương hiệu không được để trống");
+            return;
         }
+        setLoading(true);
+        fetch("http://localhost:8080/thuongHieu", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                ...newBrand,
+                trangThai: newBrand.trangThai === "Hiển thị" ? 1 : 0,
+            }),
+            credentials: "include",
+        })
+            .then(async (res) => {
+                let responseBody;
 
-        if (!res.ok) {
-          // 👇 Lấy message từ các trường phù hợp
-          let message =
-            responseBody?.errors?.tenThuongHieu || responseBody?.message || "Lỗi không xác định";
+                try {
+                    responseBody = await res.json(); // 👈 Đọc body JSON
+                } catch (err) {
+                    throw new Error("Không thể đọc phản hồi từ server");
+                }
 
-          throw new Error(message);
+                if (!res.ok) {
+                    // 👇 Lấy message từ các trường phù hợp
+                    let message =
+                        responseBody?.errors?.tenThuongHieu || responseBody?.message || "Lỗi không xác định";
+
+                    throw new Error(message);
+                }
+
+
+                return responseBody;
+            })
+            .then(() => {
+                setShowModal(false);
+                setNewBrand({ maThuongHieu: "", tenThuongHieu: "", trangThai: "Hiển thị" });
+                setQueryParams({ ...queryParams, page: 0 });
+                toast.success("Thêm thương hiệu thành công!");
+            })
+            .catch((err) => {
+                setError(err.message || "Lỗi không xác định");
+                toast.error(err.message || "Lỗi không xác định");
+            })
+            .finally(() => setLoading(false));
+    };
+
+    const handleEditClick = (brand) => {
+        setEditBrand({
+            ...brand,
+            trangThai: getTrangThaiText(brand.trangThai),
+        });
+        setShowEditModal(true);
+    };
+
+    const handleSaveEdit = () => {
+        if (!editBrand.tenThuongHieu) {
+            toast.error("Tên thương hiệu không được để trống");
+            return;
         }
+        setLoading(true);
+        fetch(`http://localhost:8080/thuongHieu/${editBrand.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                ...editBrand,
+                trangThai: editBrand.trangThai === "Hiển thị" ? 1 : 0,
+            }),
+            credentials: "include",
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Lỗi khi cập nhật thương hiệu");
+                return res.text();
+            })
+            .then(() => {
+                setShowEditModal(false);
+                setEditBrand(null);
+                setQueryParams({ ...queryParams });
+                toast.success("Cập nhật thương hiệu thành công!");
+            })
+            .catch((err) => {
+                setError(err.message || "Lỗi không xác định");
+                toast.error(err.message || "Lỗi không xác định");
+            })
+            .finally(() => setLoading(false));
+    };
 
 
-        return responseBody;
-      })
-      .then(() => {
-        setShowModal(false);
-        setNewBrand({ maThuongHieu: "", tenThuongHieu: "", trangThai: "Hiển thị" });
-        setQueryParams({ ...queryParams, page: 0 });
-        toast.success("Thêm thương hiệu thành công!");
-      })
-      .catch((err) => {
-        setError(err.message || "Lỗi không xác định");
-        toast.error(err.message || "Lỗi không xác định");
-      })
-      .finally(() => setLoading(false));
-  };
+    const paginationItems = React.useMemo(() => {
+        return getPaginationItems(brandsData.number || 0, brandsData.totalPages || 1);
+    }, [brandsData.number, brandsData.totalPages]);
 
-  const handleEditClick = (brand) => {
-    setEditBrand({
-      ...brand,
-      trangThai: getTrangThaiText(brand.trangThai),
-    });
-    setShowEditModal(true);
-  };
-
-  const handleSaveEdit = () => {
-    if (!editBrand.tenThuongHieu) {
-      toast.error("Tên thương hiệu không được để trống");
-      return;
-    }
-    setLoading(true);
-    fetch(`http://localhost:8080/thuongHieu/${editBrand.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...editBrand,
-        trangThai: editBrand.trangThai === "Hiển thị" ? 1 : 0,
-      }),
-      credentials: "include",
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Lỗi khi cập nhật thương hiệu");
-        return res.text();
-      })
-      .then(() => {
-        setShowEditModal(false);
-        setEditBrand(null);
-        setQueryParams({ ...queryParams });
-        toast.success("Cập nhật thương hiệu thành công!");
-      })
-      .catch((err) => {
-        setError(err.message || "Lỗi không xác định");
-        toast.error(err.message || "Lỗi không xác định");
-      })
-      .finally(() => setLoading(false));
-  };
-
-
-const paginationItems = React.useMemo(() => {
-  return getPaginationItems(brandsData.number || 0, brandsData.totalPages || 1);
-}, [brandsData.number, brandsData.totalPages]);
-//   const handleConfirmDelete = () => {
-//     setLoading(true);
-//     fetch(`http://localhost:8080/thuongHieu/${deleteId}`, {
-//       method: "DELETE",
-//       credentials: "include",
-//     })
-//       .then((res) => {
-//         if (!res.ok) throw new Error("Lỗi khi xóa thương hiệu");
-//         setShowDeleteDialog(false);
-//         setDeleteId(null);
-//         setQueryParams({ ...queryParams });
-//         toast.success("Xóa thương hiệu thành công!");
-//       })
-//       .catch((err) => {
-//         setError(err.message || "Lỗi không xác định");
-//         toast.error(err.message || "Lỗi không xác định");
-//       })
-//       .finally(() => setLoading(false));
-//   };
-
-  const handlePageChange = (newPage) => {
-    setQueryParams({ ...queryParams, page: newPage });
-  };
+    const handlePageChange = (newPage) => {
+        setQueryParams({ ...queryParams, page: newPage });
+    };
 
 
     const columns = [
@@ -285,108 +239,98 @@ const paginationItems = React.useMemo(() => {
     ];
 
 
-  const rows =
-    brandsData.content && brandsData.content.length
-      ? brandsData.content.map((brand, idx) => ({
-          ...brand,
-          stt: queryParams.page * queryParams.size + idx + 1,
-        }))
-      : [];
+    const rows =
+        brandsData.content && brandsData.content.length
+            ? brandsData.content.map((brand, idx) => ({
+                ...brand,
+                stt: queryParams.page * queryParams.size + idx + 1,
+            }))
+            : [];
 
-  const renderAddBrandModal = () => (
-    <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="xs" fullWidth>
-      <DialogTitle>
-        Thêm mới thương hiệu
-        <IconButton
-          aria-label="close"
-          onClick={() => setShowModal(false)}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-          size="large"
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <Input
-            placeholder="Tên thương hiệu"
-            value={newBrand.tenThuongHieu}
-            onChange={(e) => setNewBrand({ ...newBrand, tenThuongHieu: e.target.value })}
-          />
-        </FormControl>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <Select
-            value={newBrand.trangThai}
-            onChange={(e) => setNewBrand({ ...newBrand, trangThai: e.target.value })}
-            size="small"
-          >
-            <MenuItem value="Hiển thị">Hiển thị</MenuItem>
-            <MenuItem value="Ẩn">Ẩn</MenuItem>
-          </Select>
-        </FormControl>
-      </DialogContent>
-      <DialogActions>
-        <Button variant="outlined" onClick={() => setShowModal(false)} disabled={loading}>
-          Đóng
-        </Button>
-        <Button variant="contained" onClick={handleAddBrand} disabled={loading}>
-          {loading && <CircularProgress size={18} sx={{ mr: 1 }} />}
-          Thêm
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
+    const renderAddBrandModal = () => (
+        <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="xs" fullWidth>
+            <DialogTitle>
+                Thêm mới thương hiệu
+                <IconButton
+                    aria-label="close"
+                    onClick={() => setShowModal(false)}
+                    sx={{
+                        position: "absolute",
+                        right: 8,
+                        top: 8,
+                        color: (theme) => theme.palette.grey[500],
+                    }}
+                    size="large"
+                >
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+            <DialogContent>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                    <Input
+                        placeholder="Tên thương hiệu"
+                        value={newBrand.tenThuongHieu}
+                        onChange={(e) => setNewBrand({ ...newBrand, tenThuongHieu: e.target.value })}
+                    />
+                </FormControl>
+            </DialogContent>
+            <DialogActions>
+                <Button variant="outlined" onClick={() => setShowModal(false)} disabled={loading}>
+                    Đóng
+                </Button>
+                <Button variant="contained" onClick={handleAddBrand} disabled={loading}>
+                    {loading && <CircularProgress size={18} sx={{ mr: 1 }} />}
+                    Thêm
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 
-  const renderEditBrandModal = () => (
-    <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} maxWidth="xs" fullWidth>
-      <DialogTitle>
-        Sửa thương hiệu
-        <IconButton
-          aria-label="close"
-          onClick={() => setShowEditModal(false)}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-          size="large"
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <Input
-            placeholder="Tên thương hiệu"
-            value={editBrand?.tenThuongHieu || ""}
-            onChange={(e) => setEditBrand({ ...editBrand, tenThuongHieu: e.target.value })}
-          />
-        </FormControl>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <Select
-            value={editBrand?.trangThai || "Hiển thị"}
-            onChange={(e) => setEditBrand({ ...editBrand, trangThai: e.target.value })}
-            size="small"
-          >
-            <MenuItem value="Hiển thị">Hiển thị</MenuItem>
-            <MenuItem value="Ẩn">Ẩn</MenuItem>
-          </Select>
-        </FormControl>
-      </DialogContent>
-      <DialogActions>
-        <Button variant="contained" onClick={handleSaveEdit} disabled={loading}>
-          {loading && <CircularProgress size={18} sx={{ mr: 1 }} />}
-          Lưu
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
+    const renderEditBrandModal = () => (
+        <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} maxWidth="xs" fullWidth>
+            <DialogTitle>
+                Sửa thương hiệu
+                <IconButton
+                    aria-label="close"
+                    onClick={() => setShowEditModal(false)}
+                    sx={{
+                        position: "absolute",
+                        right: 8,
+                        top: 8,
+                        color: (theme) => theme.palette.grey[500],
+                    }}
+                    size="large"
+                >
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+            <DialogContent>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                    <Input
+                        placeholder="Tên thương hiệu"
+                        value={editBrand?.tenThuongHieu || ""}
+                        onChange={(e) => setEditBrand({ ...editBrand, tenThuongHieu: e.target.value })}
+                    />
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                    <Select
+                        value={editBrand?.trangThai || "Hiển thị"}
+                        onChange={(e) => setEditBrand({ ...editBrand, trangThai: e.target.value })}
+                        size="small"
+                    >
+                        <MenuItem value="Hiển thị">Hiển thị</MenuItem>
+                        <MenuItem value="Ẩn">Ẩn</MenuItem>
+                    </Select>
+                </FormControl>
+            </DialogContent>
+            <DialogActions>
+                <Button variant="contained" onClick={handleSaveEdit} disabled={loading}>
+                    {loading && <CircularProgress size={18} sx={{ mr: 1 }} />}
+                    Lưu
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 
     return (
         <DashboardLayout>
@@ -468,11 +412,6 @@ const paginationItems = React.useMemo(() => {
                     </SoftBox>
                 </Card>
                 <Card sx={{ p: { xs: 2, md: 3 }, mb: 2 }}>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
                     <SoftBox>
                         <Table columns={columns} rows={rows} loading={loading} />
                     </SoftBox>
@@ -550,25 +489,25 @@ const paginationItems = React.useMemo(() => {
                                     </Button>
                                 )
                             )}
-                          <Button
-                variant="text"
-                size="small"
-                disabled={brandsData.last}
-                onClick={() => handlePageChange(queryParams.page + 1)}
-                sx={{ color: brandsData.last ? "#bdbdbd" : "#49a3f1" }}
-              >
-                Sau
-              </Button>
-            </SoftBox>
-          </SoftBox>
-        </Card>
-        {renderAddBrandModal()}
-        {renderEditBrandModal()}
+                            <Button
+                                variant="text"
+                                size="small"
+                                disabled={brandsData.last}
+                                onClick={() => handlePageChange(queryParams.page + 1)}
+                                sx={{ color: brandsData.last ? "#bdbdbd" : "#49a3f1" }}
+                            >
+                                Sau
+                            </Button>
+                        </SoftBox>
+                    </SoftBox>
+                </Card>
+                {renderAddBrandModal()}
+                {renderEditBrandModal()}
 
-      </SoftBox>
-      <Footer />
-    </DashboardLayout>
-  );
+            </SoftBox>
+            <Footer />
+        </DashboardLayout>
+    );
 }
 
 export default BrandTable;

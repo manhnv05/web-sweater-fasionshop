@@ -1,7 +1,12 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
+import com.example.datn.dto.ChatLieuDTO;
 import com.example.datn.dto.DanhMucDTO;
 import com.example.datn.service.DanhMucService;
+import com.example.datn.vo.chatLieuVO.ChatLieuUpdateVO;
+import com.example.datn.vo.chatLieuVO.ChatLieuVO;
 import com.example.datn.vo.danhMucVO.DanhMucQueryVO;
 import com.example.datn.vo.danhMucVO.DanhMucUpdateVO;
 import com.example.datn.vo.danhMucVO.DanhMucVO;
@@ -9,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,8 +29,9 @@ public class DanhMucController {
     private DanhMucService danhMucService;
 
     @PostMapping
-    public String save(@Valid @RequestBody DanhMucVO vO) {
-        return danhMucService.save(vO).toString();
+    public ResponseEntity<ApiResponse<DanhMucDTO>> save(
+            @Valid @RequestBody DanhMucVO vO) {;
+        return ResponseHelper.success("Thêm danh mục thành công!", danhMucService.save(vO));
     }
 
     @DeleteMapping("/{id}")
@@ -33,9 +40,12 @@ public class DanhMucController {
     }
 
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody DanhMucUpdateVO vO) {
+    public ResponseEntity<ApiResponse<DanhMucDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody DanhMucUpdateVO vO) {
         danhMucService.update(id, vO);
+        DanhMucDTO dto = danhMucService.getById(id);
+        return ResponseHelper.success("Cập nhật danh mục thành công!", dto);
     }
 
     @GetMapping("/{id}")

@@ -40,25 +40,6 @@ function getPaginationItems(current, total) {
     return [0, 1, "...", current, "...", total - 2, total - 1];
 }
 
-function generateMaCoAo(existingList = []) {
-    const numbers = existingList
-        .map((item) => {
-            const match = /^CA(\d{4})$/.exec(item.ma || "");
-            return match ? parseInt(match[1], 10) : null;
-        })
-        .filter((num) => num !== null)
-        .sort((a, b) => a - b);
-    let next = 1;
-    for (let i = 0; i < numbers.length; i++) {
-        if (numbers[i] !== i + 1) {
-            next = i + 1;
-            break;
-        }
-        next = numbers.length + 1;
-    }
-    return "CA" + String(next).padStart(4, "0");
-}
-
 function CollarTable() {
     const [queryParams, setQueryParams] = useState({
         tenCoAo: "",
@@ -87,15 +68,6 @@ function CollarTable() {
     const [editCollar, setEditCollar] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
 
-
-    useEffect(() => {
-        if (showModal && collarsData.content) {
-            setNewCollar((prev) => ({
-                ...prev,
-                ma: generateMaCoAo(collarsData.content),
-            }));
-        }
-    }, [showModal, collarsData.content]);
 
     useEffect(() => {
         setLoading(true);
@@ -133,22 +105,22 @@ function CollarTable() {
             credentials: "include",
         })
             .then(async (res) => {
-        let responseBody;
+                let responseBody;
 
-        try {
-          responseBody = await res.json(); // 👈 Đọc body JSON
-        } catch (err) {
-          throw new Error("Không thể đọc phản hồi từ server");
-        }
-        
-        if (!res.ok) {
-          // 👇 Lấy message từ các trường phù hợp
-           let message =
-            responseBody?.errors?.tenCoAo || responseBody?.message || "Lỗi không xác định";
-                throw new Error(message);
-        }
+                try {
+                    responseBody = await res.json(); // 👈 Đọc body JSON
+                } catch (err) {
+                    throw new Error("Không thể đọc phản hồi từ server");
+                }
 
-        return responseBody;
+                if (!res.ok) {
+                    // 👇 Lấy message từ các trường phù hợp
+                    let message =
+                        responseBody?.errors?.tenCoAo || responseBody?.message || "Lỗi không xác định";
+                    throw new Error(message);
+                }
+
+                return responseBody;
             })
             .then(() => {
                 setShowModal(false);
@@ -286,16 +258,6 @@ function CollarTable() {
                         value={newCollar.tenCoAo}
                         onChange={(e) => setNewCollar({ ...newCollar, tenCoAo: e.target.value })}
                     />
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Select
-                        value={Number(newCollar.trangThai)}
-                        onChange={(e) => setNewCollar({ ...newCollar, trangThai: Number(e.target.value) })}
-                        size="small"
-                    >
-                        <MenuItem value={1}>Hiển thị</MenuItem>
-                        <MenuItem value={0}>Ẩn</MenuItem>
-                    </Select>
                 </FormControl>
             </DialogContent>
             <DialogActions>
@@ -439,11 +401,6 @@ function CollarTable() {
                 </Card>
 
                 <Card sx={{ p: { xs: 2, md: 3 }, mb: 2 }}>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
                     <SoftBox>
                         <Table columns={columns} rows={rows} loading={loading} />
                     </SoftBox>

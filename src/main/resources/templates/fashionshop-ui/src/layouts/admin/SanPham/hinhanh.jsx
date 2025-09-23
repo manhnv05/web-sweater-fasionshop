@@ -173,7 +173,6 @@ function ImageTable() {
     // Lưu hình ảnh (thêm mới/sửa)
     const handleSave = async () => {
         if (
-            !(formData.maAnh || "").trim() ||
             !(formData.moTa || "").trim() ||
             (!editingImage && !formData.duongDanAnh)
         ) {
@@ -425,32 +424,6 @@ function ImageTable() {
                             </FormControl>
                         </SoftBox>
                         <SoftBox display="flex" alignItems="center" gap={1}>
-                            <IconButton onClick={handleMenuOpen} sx={{ color: "#495057" }}>
-                                <Icon fontSize="small">menu</Icon>
-                            </IconButton>
-                            <Menu
-                                anchorEl={anchorEl}
-                                open={Boolean(anchorEl)}
-                                onClose={handleMenuClose}
-                            >
-                                <MenuItem
-                                    onClick={handleMenuClose}
-                                    sx={{ color: "#384D6C" }}
-                                >
-                                    <FaQrcode
-                                        className="me-2"
-                                        style={{ color: "#0d6efd" }}
-                                    />{" "}
-                                    Quét mã
-                                </MenuItem>
-                                <MenuItem
-                                    onClick={handleMenuClose}
-                                    sx={{ color: "#384D6C" }}
-                                >
-                                    <span style={{ color: "#27ae60", marginRight: 8 }}>📥</span>{" "}
-                                    Export
-                                </MenuItem>
-                            </Menu>
                             <Button
                                 variant="outlined"
                                 size="small"
@@ -478,11 +451,6 @@ function ImageTable() {
 
                 {/* Card Table/Pagination */}
                 <Card sx={{ p: { xs: 2, md: 3 }, mb: 2 }}>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
                     <SoftBox>
                         <Table columns={columns} rows={rows} loading={loading} />
                     </SoftBox>
@@ -590,15 +558,6 @@ function ImageTable() {
                         </IconButton>
                     </DialogTitle>
                     <DialogContent>
-                        <FormControl fullWidth sx={{ mb: 2, mt: 2 }}>
-                            <Input
-                                placeholder="Mã ảnh"
-                                name="maAnh"
-                                value={formData.maAnh || ""}
-                                disabled={!!editingImage}
-                                onChange={handleChange}
-                            />
-                        </FormControl>
                         <FormControl fullWidth sx={{ mb: 2 }}>
                             <label
                                 htmlFor="file-input"
@@ -664,17 +623,6 @@ function ImageTable() {
                                 />
                                 Ảnh mặc định
                             </label>
-                        </FormControl>
-                        <FormControl fullWidth sx={{ mb: 2 }}>
-                            <Select
-                                name="trangThai"
-                                value={formData.trangThai}
-                                onChange={handleChange}
-                                size="small"
-                            >
-                                <MenuItem value="Hiển thị">Hiển thị</MenuItem>
-                                <MenuItem value="Ẩn">Ẩn</MenuItem>
-                            </Select>
                         </FormControl>
                     </DialogContent>
                     <DialogActions>

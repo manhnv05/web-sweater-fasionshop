@@ -93,10 +93,6 @@ function ColorTable() {
             toast.error("Tên màu sắc không được để trống");
             return;
         }
-        if (!newColor.maMau) {
-            toast.error("Mã màu không được để trống");
-            return;
-        }
         setLoading(true);
         fetch("http://localhost:8080/mauSac", {
             method: "POST",
@@ -108,22 +104,22 @@ function ColorTable() {
             credentials: "include",
         })
             .then(async (res) => {
-        let responseBody;
+                let responseBody;
 
-        try {
-          responseBody = await res.json(); // 👈 Đọc body JSON
-        } catch (err) {
-          throw new Error("Không thể đọc phản hồi từ server");
-        }
-        
-        if (!res.ok) {
-           let message =
-            responseBody?.errors?.tenMauSac || responseBody?.message || "Lỗi không xác định";
-                throw new Error(message);
-        }
+                try {
+                    responseBody = await res.json(); // 👈 Đọc body JSON
+                } catch (err) {
+                    throw new Error("Không thể đọc phản hồi từ server");
+                }
 
-        return responseBody;
-      })
+                if (!res.ok) {
+                    let message =
+                        responseBody?.errors?.tenMauSac || responseBody?.message || "Lỗi không xác định";
+                    throw new Error(message);
+                }
+
+                return responseBody;
+            })
             .then(() => {
                 setShowModal(false);
                 setNewColor({ maMau: "", tenMauSac: "", trangThai: "Hiển thị" });
@@ -269,24 +265,6 @@ function ColorTable() {
                         onChange={(e) => setNewColor({ ...newColor, tenMauSac: e.target.value })}
                     />
                 </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Input
-                        placeholder="Mã màu (ví dụ: #FF0000)"
-                        value={newColor.maMau}
-                        onChange={(e) => setNewColor({ ...newColor, maMau: e.target.value })}
-                        type="text"
-                    />
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Select
-                        value={newColor.trangThai}
-                        onChange={(e) => setNewColor({ ...newColor, trangThai: e.target.value })}
-                        size="small"
-                    >
-                        <MenuItem value="Hiển thị">Hiển thị</MenuItem>
-                        <MenuItem value="Ẩn">Ẩn</MenuItem>
-                    </Select>
-                </FormControl>
             </DialogContent>
             <DialogActions>
                 <Button variant="outlined" onClick={() => setShowModal(false)} disabled={loading}>
@@ -324,14 +302,6 @@ function ColorTable() {
                         placeholder="Tên màu sắc"
                         value={editColor?.tenMauSac || ""}
                         onChange={(e) => setEditColor({ ...editColor, tenMauSac: e.target.value })}
-                    />
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Input
-                        placeholder="Mã màu (ví dụ: #FF0000)"
-                        value={editColor?.maMau || ""}
-                        onChange={(e) => setEditColor({ ...editColor, maMau: e.target.value })}
-                        type="text"
                     />
                 </FormControl>
                 <FormControl fullWidth sx={{ mb: 2 }}>
@@ -435,11 +405,6 @@ function ColorTable() {
                     </SoftBox>
                 </Card>
                 <Card sx={{ p: { xs: 2, md: 3 }, mb: 2 }}>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
                     <SoftBox>
                         <Table columns={columns} rows={rows} loading={loading} />
                     </SoftBox>

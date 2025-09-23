@@ -1,10 +1,14 @@
 package com.example.datn.service;
 
+import com.example.datn.dto.KichThuocDTO;
 import com.example.datn.dto.TayAoDTO;
+import com.example.datn.entity.KichThuoc;
 import com.example.datn.entity.TayAo;
 import com.example.datn.exception.AppException;
 import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.TayAoRepository;
+import com.example.datn.vo.kichThuocVO.KichThuocUpdateVO;
+import com.example.datn.vo.kichThuocVO.KichThuocVO;
 import com.example.datn.vo.tayAoVO.TayAoQueryVO;
 import com.example.datn.vo.tayAoVO.TayAoUpdateVO;
 import com.example.datn.vo.tayAoVO.TayAoVO;
@@ -23,14 +27,39 @@ public class TayAoService {
     @Autowired
     private TayAoRepository tayAoRepository;
 
-    public Integer save(TayAoVO vO) {
+    public TayAoDTO save(TayAoVO vO) {
+        // Kiểm tra trống
+        if (vO.getTenTayAo() == null || vO.getTenTayAo().trim().isEmpty()) {
+            throw new AppException(ErrorCode.TAYAO_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenTayAo().length() > 50) {
+            throw new AppException(ErrorCode.TAYAO_NAME_TOO_LONG,
+                    ErrorCode.TAYAO_NAME_TOO_LONG.getErrorMessage(50));
+        }
+        // Kiểm tra trùng tên
+        if (tayAoRepository.existsByTenTayAo(vO.getTenTayAo().trim())) {
+            throw new AppException(ErrorCode.TAYAO_NAME_DUPLICATE);
+        }
+
+        Integer maxCode = tayAoRepository.findMaxMaTayAoCode();
+        int nextCode = (maxCode != null ? maxCode : 0) + 1;
+        String maTayAo = String.format("TA%04d", nextCode);
+
         TayAo bean = new TayAo();
-        if (tayAoRepository.existsTayAoByTenTayAo(vO.getTenTayAo())){
+
+        if ( tayAoRepository.existsByTenTayAo(vO.getTenTayAo())){
             throw new AppException(ErrorCode.TAY_AO_ALREADY_EXISTS);
         }
         BeanUtils.copyProperties(vO, bean);
+        bean.setMa(maTayAo);
+        bean.setTrangThai(1);
         bean = tayAoRepository.save(bean);
-        return bean.getId();
+
+        // Trả về DTO luôn, hoặc nếu muốn trả về id thì return bean.getId();
+        TayAoDTO dto = new TayAoDTO();
+        BeanUtils.copyProperties(bean, dto);
+        return dto;
     }
 
     public void delete(Integer id) {
@@ -39,6 +68,21 @@ public class TayAoService {
 
     public void update(Integer id, TayAoUpdateVO vO) {
         TayAo bean = requireOne(id);
+        // Kiểm tra trống
+        if (vO.getTenTayAo() == null || vO.getTenTayAo().trim().isEmpty()) {
+            throw new AppException(ErrorCode.TAYAO_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenTayAo().length() > 50) {
+            throw new AppException(ErrorCode.TAYAO_NAME_TOO_LONG,
+                    String.format(ErrorCode.TAYAO_NAME_TOO_LONG.getErrorMessage(), 50));
+        }
+        // Kiểm tra trùng tên (trừ chính bản ghi đang sửa)
+        String newName = vO.getTenTayAo().trim();
+        if (tayAoRepository.existsByTenTayAo(newName)
+                && !bean.getTenTayAo().equalsIgnoreCase(newName)) {
+            throw new AppException(ErrorCode.TAYAO_NAME_DUPLICATE);
+        }
         BeanUtils.copyProperties(vO, bean);
         tayAoRepository.save(bean);
     }

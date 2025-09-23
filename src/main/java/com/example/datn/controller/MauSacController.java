@@ -1,7 +1,12 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
+import com.example.datn.dto.KichThuocDTO;
 import com.example.datn.dto.MauSacDTO;
 import com.example.datn.service.MauSacService;
+import com.example.datn.vo.kichThuocVO.KichThuocUpdateVO;
+import com.example.datn.vo.kichThuocVO.KichThuocVO;
 import com.example.datn.vo.mauSacVO.MauSacQueryVO;
 import com.example.datn.vo.mauSacVO.MauSacUpdateVO;
 import com.example.datn.vo.mauSacVO.MauSacVO;
@@ -9,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,19 +29,22 @@ public class MauSacController {
     private MauSacService mauSacService;
 
     @PostMapping
-    public String save(@Valid @RequestBody MauSacVO vO) {
-        return mauSacService.save(vO).toString();
+    public ResponseEntity<ApiResponse<MauSacDTO>> save(
+            @Valid @RequestBody MauSacVO vO) {;
+        return ResponseHelper.success("Thêm màu sắc thành công!", mauSacService.save(vO));
     }
-
     @DeleteMapping("/{id}")
     public void delete(@Valid @NotNull @PathVariable("id") Integer id) {
         mauSacService.delete(id);
     }
 
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody MauSacUpdateVO vO) {
+    public ResponseEntity<ApiResponse<MauSacDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody MauSacUpdateVO vO) {
         mauSacService.update(id, vO);
+        MauSacDTO dto = mauSacService.getById(id);
+        return ResponseHelper.success("Cập nhật màu sắc thành công!", dto);
     }
 
     @GetMapping("/{id}")

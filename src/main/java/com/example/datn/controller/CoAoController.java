@@ -1,14 +1,20 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
 import com.example.datn.dto.CoAoDTO;
+import com.example.datn.dto.DanhMucDTO;
 import com.example.datn.service.CoAoService;
 import com.example.datn.vo.coAoVO.CoAoQueryVO;
 import com.example.datn.vo.coAoVO.CoAoUpdateVO;
 import com.example.datn.vo.coAoVO.CoAoVO;
+import com.example.datn.vo.danhMucVO.DanhMucUpdateVO;
+import com.example.datn.vo.danhMucVO.DanhMucVO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,19 +29,22 @@ public class CoAoController {
     private CoAoService coAoService;
 
     @PostMapping
-    public String save(@Valid @RequestBody CoAoVO vO) {
-        return coAoService.save(vO).toString();
+    public ResponseEntity<ApiResponse<CoAoDTO>> save(
+            @Valid @RequestBody CoAoVO vO) {;
+        return ResponseHelper.success("Thêm cổ áo thành công!", coAoService.save(vO));
     }
-
     @DeleteMapping("/{id}")
     public void delete(@Valid @NotNull @PathVariable("id") Integer id) {
         coAoService.delete(id);
     }
 
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody CoAoUpdateVO vO) {
+    public ResponseEntity<ApiResponse<CoAoDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody CoAoUpdateVO vO) {
         coAoService.update(id, vO);
+        CoAoDTO dto = coAoService.getById(id);
+        return ResponseHelper.success("Cập nhật cổ áo thành công!", dto);
     }
 
     @GetMapping("/{id}")

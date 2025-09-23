@@ -40,26 +40,6 @@ function getPaginationItems(current, total) {
     return [0, 1, "...", current, "...", total - 2, total - 1];
 }
 
-function generateMaterialCode(existingList = []) {
-    const numbers = existingList
-        .map((item) => {
-            const match = /^CL(\d{4})$/.exec(item.maChatLieu || "");
-            return match ? parseInt(match[1], 10) : null;
-        })
-        .filter((number) => number !== null)
-        .sort((a, b) => a - b);
-
-    let next = 1;
-    for (let index = 0; index < numbers.length; index++) {
-        if (numbers[index] !== index + 1) {
-            next = index + 1;
-            break;
-        }
-        next = numbers.length + 1;
-    }
-    return "CL" + String(next).padStart(4, "0");
-}
-
 function MaterialTable() {
     const [queryParams, setQueryParams] = useState({
         tenChatLieu: "",
@@ -80,27 +60,15 @@ function MaterialTable() {
 
     const [showModal, setShowModal] = useState(false);
     const [newMaterial, setNewMaterial] = useState({
-        maChatLieu: "",
         tenChatLieu: "",
-        trangThai: 1,
     });
 
     const [editMaterial, setEditMaterial] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
 
-    const [deleteId, setDeleteId] = useState(null);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const [anchorEl, setAnchorEl] = useState(null);
 
-    useEffect(() => {
-        if (showModal && materialsData.content) {
-            setNewMaterial((previous) => ({
-                ...previous,
-                maChatLieu: generateMaterialCode(materialsData.content),
-            }));
-        }
-    }, [showModal, materialsData.content]);
 
     useEffect(() => {
         setLoading(true);
@@ -123,119 +91,88 @@ function MaterialTable() {
     }, [queryParams]);
 
 
-    const handleAddMaterial = () => {
+    const handleAddMaterial = async () => {
         if (!newMaterial.tenChatLieu) {
             toast.error("Tên chất liệu không được để trống");
             return;
         }
         setLoading(true);
-        fetch("http://localhost:8080/chatLieu", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                ...newMaterial,
-                trangThai: Number(newMaterial.trangThai),
-            }),
-            credentials: "include",
-        })
-            .then(async (response) => {
-            let responseBody;
+        try {
+            const response = await fetch("http://localhost:8080/chatLieu", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ...newMaterial,
+                    trangThai: Number(newMaterial.trangThai),
+                }),
+                credentials: "include",
+            });
+            const result = await response.json();
 
-            try {
-                responseBody = await response.json(); // 👈 đọc body dù là lỗi
-            } catch (err) {
-                throw new Error("Không đọc được phản hồi từ server");
+            if (!response.ok || result.code !== 200) {
+                // Nếu lỗi, lấy message từ BE
+                toast.error(result.message || "Lỗi khi thêm chất liệu");
+                setError(result.message || "Lỗi khi thêm chất liệu");
+                return;
             }
-
-            if (!response.ok) {
-               let message =
-            responseBody?.errors?.tenChatLieu || responseBody?.message || "Lỗi không xác định";
-                throw new Error(message);
-            }
-
-            return responseBody;
-        })
-            .then(() => {
-                setShowModal(false);
-                setNewMaterial({ maChatLieu: "", tenChatLieu: "", trangThai: 1 });
-                setQueryParams({ ...queryParams, page: 0 });
-                toast.success("Thêm chất liệu thành công!");
-            })
-            .catch((err) => {
-                setError(err.message || "Lỗi không xác định");
-                toast.error(err.message || "Lỗi không xác định");
-            })
-            .finally(() => setLoading(false));
+            setShowModal(false);
+            setNewMaterial({ maChatLieu: "", tenChatLieu: "", trangThai: 1 });
+            setQueryParams({ ...queryParams, page: 0 });
+            toast.success(result.message || "Thêm chất liệu thành công!");
+        } catch (err) {
+            setError(err.message || "Lỗi không xác định");
+            toast.error(err.message || "Lỗi không xác định");
+        } finally {
+            setLoading(false);
+        }
     };
+
 
     const handleEditClick = (material) => {
         setEditMaterial({ ...material });
         setShowEditModal(true);
     };
 
-    const handleSaveEdit = () => {
+    const handleSaveEdit = async () => {
         if (!editMaterial.tenChatLieu) {
             toast.error("Tên chất liệu không được để trống");
             return;
         }
         setLoading(true);
-        fetch(`http://localhost:8080/chatLieu/${editMaterial.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                ...editMaterial,
-                trangThai: Number(editMaterial.trangThai),
-            }),
-            credentials: "include",
-        })
-            .then((response) => {
-                if (!response.ok) throw new Error("Lỗi khi cập nhật chất liệu");
-                return response.text();
-            })
-            .then(() => {
-                setShowEditModal(false);
-                setEditMaterial(null);
-                setQueryParams({ ...queryParams });
-                toast.success("Cập nhật chất liệu thành công!");
-            })
-            .catch((err) => {
-                setError(err.message || "Lỗi không xác định");
-                toast.error(err.message || "Lỗi không xác định");
-            })
-            .finally(() => setLoading(false));
+        try {
+            const response = await fetch(`http://localhost:8080/chatLieu/${editMaterial.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ...editMaterial,
+                    trangThai: Number(editMaterial.trangThai),
+                }),
+                credentials: "include",
+            });
+            const result = await response.json();
+
+            if (!response.ok || result.code !== 200) {
+                toast.error(result.message || "Lỗi khi cập nhật chất liệu");
+                setError(result.message || "Lỗi khi cập nhật chất liệu");
+                return;
+            }
+            setShowEditModal(false);
+            setEditMaterial(null);
+            setQueryParams({ ...queryParams });
+            toast.success(result.message || "Cập nhật chất liệu thành công!");
+        } catch (err) {
+            setError(err.message || "Lỗi không xác định");
+            toast.error(err.message || "Lỗi không xác định");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleDelete = (id) => {
-        setDeleteId(id);
-        setShowDeleteDialog(true);
-    };
 
-    const handleConfirmDelete = () => {
-        setLoading(true);
-        fetch(`http://localhost:8080/chatLieu/${deleteId}`, {
-            method: "DELETE",
-            credentials: "include",
-        })
-            .then((response) => {
-                if (!response.ok) throw new Error("Lỗi khi xóa chất liệu");
-                setShowDeleteDialog(false);
-                setDeleteId(null);
-                setQueryParams({ ...queryParams });
-                toast.success("Xóa chất liệu thành công!");
-            })
-            .catch((err) => {
-                setError(err.message || "Lỗi không xác định");
-                toast.error(err.message || "Lỗi không xác định");
-            })
-            .finally(() => setLoading(false));
-    };
 
     const handlePageChange = (newPage) => {
         setQueryParams({ ...queryParams, page: newPage });
     };
-
-    const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-    const handleMenuClose = () => setAnchorEl(null);
 
     const columns = [
         { name: "stt", label: "STT", align: "center", width: "60px" },
@@ -280,14 +217,6 @@ function MaterialTable() {
                     >
                         <FaEdit />
                     </IconButton>
-                    {/* <IconButton
-                        size="small"
-                        sx={{ color: "#4acbf2" }}
-                        title="Xóa"
-                        onClick={() => handleDelete(row.id)}
-                    >
-                        <FaTrash />
-                    </IconButton> */}
                 </SoftBox>
             ),
         },
@@ -326,16 +255,6 @@ function MaterialTable() {
                         value={newMaterial.tenChatLieu}
                         onChange={(event) => setNewMaterial({ ...newMaterial, tenChatLieu: event.target.value })}
                     />
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Select
-                        value={Number(newMaterial.trangThai)}
-                        onChange={(event) => setNewMaterial({ ...newMaterial, trangThai: Number(event.target.value) })}
-                        size="small"
-                    >
-                        <MenuItem value={1}>Hiển thị</MenuItem>
-                        <MenuItem value={0}>Ẩn</MenuItem>
-                    </Select>
                 </FormControl>
             </DialogContent>
             <DialogActions>
@@ -392,76 +311,6 @@ function MaterialTable() {
                     {loading && <CircularProgress size={18} sx={{ marginRight: 1 }} />}
                     Lưu
                 </Button>
-            </DialogActions>
-        </Dialog>
-    );
-
-    const renderDeleteDialog = () => (
-        <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
-            <DialogTitle
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingRight: 2,
-                    fontWeight: 700,
-                    fontSize: 20,
-                    paddingBottom: 1,
-                    paddingTop: 2,
-                }}
-            >
-                <span>Bạn chắc chắn muốn xóa chất liệu này?</span>
-                <IconButton
-                    aria-label="close"
-                    onClick={() => setShowDeleteDialog(false)}
-                    sx={{
-                        color: (theme) => theme.palette.grey[500],
-                        marginLeft: 2,
-                    }}
-                    size="large"
-                >
-                    <CloseIcon sx={{ fontSize: 26 }} />
-                </IconButton>
-            </DialogTitle>
-            <DialogActions sx={{ paddingBottom: 3, paddingTop: 1, justifyContent: "center" }}>
-                <Button
-                    variant="outlined"
-                    onClick={() => setShowDeleteDialog(false)}
-                    disabled={loading}
-                    sx={{
-                        borderRadius: 2,
-                        textTransform: "none",
-                        fontWeight: 400,
-                        color: "#49a3f1",
-                        borderColor: "#49a3f1",
-                        boxShadow: "none",
-                        background: "#fff",
-                        marginRight: 1.5,
-                        "&:hover": {
-                            borderColor: "#1769aa",
-                            background: "#f0f6fd",
-                            color: "#1769aa",
-                        },
-                        "&.Mui-disabled": {
-                            color: "#49a3f1",
-                            borderColor: "#49a3f1",
-                            opacity: 0.7,
-                            background: "#fff",
-                        },
-                    }}
-                >
-                    Hủy
-                </Button>
-                {/* <Button
-                    variant="contained"
-                    color="error"
-                    onClick={handleConfirmDelete}
-                    disabled={loading}
-                    sx={{ borderRadius: 2, minWidth: 90, fontWeight: 500 }}
-                >
-                    {loading && <CircularProgress size={18} sx={{ marginRight: 1 }} />}
-                    Xóa
-                </Button> */}
             </DialogActions>
         </Dialog>
     );
@@ -526,17 +375,6 @@ function MaterialTable() {
                             </FormControl>
                         </SoftBox>
                         <SoftBox display="flex" alignItems="center" gap={1}>
-                            <IconButton onClick={handleMenuOpen} sx={{ color: "#495057" }}>
-                                <Icon fontSize="small">menu</Icon>
-                            </IconButton>
-                            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                                <MenuItem onClick={handleMenuClose} sx={{ color: "#384D6C" }}>
-                                    <FaQrcode className="me-2" style={{ color: "#0d6efd" }} /> Quét mã
-                                </MenuItem>
-                                <MenuItem onClick={handleMenuClose} sx={{ color: "#384D6C" }}>
-                                    <span style={{ color: "#27ae60", marginRight: 8 }}>📥</span> Export Excel
-                                </MenuItem>
-                            </Menu>
                             <Button
                                 variant="outlined"
                                 size="small"
@@ -563,11 +401,6 @@ function MaterialTable() {
                 </Card>
 
                 <Card sx={{ padding: { xs: 2, md: 3 }, marginBottom: 2 }}>
-                    {error && (
-                        <Alert severity="error" sx={{ marginBottom: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
                     <SoftBox>
                         <Table columns={columns} rows={rows} loading={loading} />
                     </SoftBox>
@@ -659,7 +492,6 @@ function MaterialTable() {
                 </Card>
                 {renderAddMaterialModal()}
                 {renderEditMaterialModal()}
-                {renderDeleteDialog()}
             </SoftBox>
             <Footer />
         </DashboardLayout>

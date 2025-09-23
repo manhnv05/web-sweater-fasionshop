@@ -1,7 +1,12 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
+import com.example.datn.dto.KichThuocDTO;
 import com.example.datn.dto.TayAoDTO;
 import com.example.datn.service.TayAoService;
+import com.example.datn.vo.kichThuocVO.KichThuocUpdateVO;
+import com.example.datn.vo.kichThuocVO.KichThuocVO;
 import com.example.datn.vo.tayAoVO.TayAoQueryVO;
 import com.example.datn.vo.tayAoVO.TayAoUpdateVO;
 import com.example.datn.vo.tayAoVO.TayAoVO;
@@ -9,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,19 +29,22 @@ public class TayAoController {
     private TayAoService tayAoService;
 
     @PostMapping
-    public String save(@Valid @RequestBody TayAoVO vO) {
-        return tayAoService.save(vO).toString();
+    public ResponseEntity<ApiResponse<TayAoDTO>> save(
+            @Valid @RequestBody TayAoVO vO) {;
+        return ResponseHelper.success("Thêm tay áo thành công!", tayAoService.save(vO));
     }
-
     @DeleteMapping("/{id}")
     public void delete(@Valid @NotNull @PathVariable("id") Integer id) {
         tayAoService.delete(id);
     }
 
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody TayAoUpdateVO vO) {
+    public ResponseEntity<ApiResponse<TayAoDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody TayAoUpdateVO vO) {
         tayAoService.update(id, vO);
+        TayAoDTO dto = tayAoService.getById(id);
+        return ResponseHelper.success("Cập nhật tay áo thành công!", dto);
     }
 
     @GetMapping("/{id}")

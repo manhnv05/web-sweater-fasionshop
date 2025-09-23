@@ -40,11 +40,15 @@ public class HinhAnhService {
             Integer trangThai,
             MultipartFile duongDanAnh
     ) {
+        Integer maxCode = hinhAnhRepository.findMaxMaHinhAnhCode();
+        int nextCode = (maxCode != null ? maxCode : 0) + 1;
+        String maHinhAnh = String.format("HA%04d", nextCode);
+
         HinhAnh bean = new HinhAnh();
-        bean.setMaAnh(maAnh);
+        bean.setMaAnh(maHinhAnh);
         bean.setAnhMacDinh(anhMacDinh);
         bean.setMoTa(moTa);
-        bean.setTrangThai(trangThai);
+        bean.setTrangThai(1);
 
         if (duongDanAnh != null && !duongDanAnh.isEmpty()) {
             try {

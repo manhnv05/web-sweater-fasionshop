@@ -31,26 +31,6 @@ const viewOptions = [5, 10, 20];
 // Get status text
 const getTrangThaiText = (val) => val === 1 || val === "1" || val === "Hiển thị" ? "Hiển thị" : "Ẩn";
 
-// Auto-generate category code
-function generateMaDanhMuc(existingList = []) {
-    const numbers = existingList
-        .map((item) => {
-            const match = /^DM(\d{4})$/.exec(item.maDanhMuc || "");
-            return match ? parseInt(match[1], 10) : null;
-        })
-        .filter((num) => num !== null)
-        .sort((a, b) => a - b);
-    let next = 1;
-    for (let i = 0; i < numbers.length; i++) {
-        if (numbers[i] !== i + 1) {
-            next = i + 1;
-            break;
-        }
-        next = numbers.length + 1;
-    }
-    return "DM" + String(next).padStart(4, "0");
-}
-
 // Pagination helper
 function getPaginationItems(current, total) {
     if (total <= 5) return Array.from({ length: total }, (_, i) => i);
@@ -86,21 +66,6 @@ function CategoryTable() {
 
     const [editCategory, setEditCategory] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
-
-    const [deleteId, setDeleteId] = useState(null);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-    const [anchorEl, setAnchorEl] = useState(null);
-
-    // Auto-generate code when opening modal
-    useEffect(() => {
-        if (showModal && categoriesData.content) {
-            setNewCategory((prev) => ({
-                ...prev,
-                maDanhMuc: generateMaDanhMuc(categoriesData.content),
-            }));
-        }
-    }, [showModal, categoriesData.content]);
 
     // Fetch categories from API
     useEffect(() => {
@@ -138,23 +103,23 @@ function CategoryTable() {
                 trangThai: newCategory.trangThai === "Hiển thị" ? 1 : 0,
             }),
         })
-          .then(async (res) => {
-            let responseBody;
+            .then(async (res) => {
+                let responseBody;
 
-            try {
-                responseBody = await res.json(); // 👈 đọc body JSON kể cả khi lỗi
-            } catch (err) {
-                throw new Error("Không đọc được phản hồi từ server");
-            }
+                try {
+                    responseBody = await res.json(); // 👈 đọc body JSON kể cả khi lỗi
+                } catch (err) {
+                    throw new Error("Không đọc được phản hồi từ server");
+                }
 
-            if (!res.ok) {
-               let message =
-            responseBody?.errors?.tenDanhMuc || responseBody?.message || "Lỗi không xác định";
-                throw new Error(message);
-            }
+                if (!res.ok) {
+                    let message =
+                        responseBody?.errors?.tenDanhMuc || responseBody?.message || "Lỗi không xác định";
+                    throw new Error(message);
+                }
 
-            return responseBody;
-        })
+                return responseBody;
+            })
             .then(() => {
                 setShowModal(false);
                 setNewCategory({ maDanhMuc: "", tenDanhMuc: "", trangThai: "Hiển thị" });
@@ -296,16 +261,6 @@ function CategoryTable() {
                         value={newCategory.tenDanhMuc}
                         onChange={(e) => setNewCategory({ ...newCategory, tenDanhMuc: e.target.value })}
                     />
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                    <Select
-                        value={newCategory.trangThai}
-                        onChange={(e) => setNewCategory({ ...newCategory, trangThai: e.target.value })}
-                        size="small"
-                    >
-                        <MenuItem value="Hiển thị">Hiển thị</MenuItem>
-                        <MenuItem value="Ẩn">Ẩn</MenuItem>
-                    </Select>
                 </FormControl>
             </DialogContent>
             <DialogActions>
@@ -450,11 +405,6 @@ function CategoryTable() {
                     </SoftBox>
                 </Card>
                 <Card sx={{ p: { xs: 2, md: 3 }, mb: 2 }}>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
                     <SoftBox>
                         <Table columns={columns} rows={rows} loading={loading} />
                     </SoftBox>

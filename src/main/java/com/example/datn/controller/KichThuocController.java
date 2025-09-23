@@ -1,7 +1,12 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
+import com.example.datn.dto.DanhMucDTO;
 import com.example.datn.dto.KichThuocDTO;
 import com.example.datn.service.KichThuocService;
+import com.example.datn.vo.danhMucVO.DanhMucUpdateVO;
+import com.example.datn.vo.danhMucVO.DanhMucVO;
 import com.example.datn.vo.kichThuocVO.KichThuocQueryVO;
 import com.example.datn.vo.kichThuocVO.KichThuocUpdateVO;
 import com.example.datn.vo.kichThuocVO.KichThuocVO;
@@ -9,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,19 +29,22 @@ public class KichThuocController {
     private KichThuocService kichThuocService;
 
     @PostMapping
-    public String save(@Valid @RequestBody KichThuocVO vO) {
-        return kichThuocService.save(vO).toString();
+    public ResponseEntity<ApiResponse<KichThuocDTO>> save(
+            @Valid @RequestBody KichThuocVO vO) {;
+        return ResponseHelper.success("Thêm kích thước thành công!", kichThuocService.save(vO));
     }
-
     @DeleteMapping("/{id}")
     public void delete(@Valid @NotNull @PathVariable("id") Integer id) {
         kichThuocService.delete(id);
     }
 
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody KichThuocUpdateVO vO) {
+    public ResponseEntity<ApiResponse<KichThuocDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody KichThuocUpdateVO vO) {
         kichThuocService.update(id, vO);
+        KichThuocDTO dto = kichThuocService.getById(id);
+        return ResponseHelper.success("Cập nhật kích thước thành công!", dto);
     }
 
     @GetMapping("/{id}")

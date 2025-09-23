@@ -1,5 +1,7 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
 import com.example.datn.dto.ChatLieuDTO;
 import com.example.datn.service.ChatLieuService;
 import com.example.datn.vo.chatLieuVO.ChatLieuQueryVO;
@@ -9,6 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,8 +26,9 @@ public class ChatLieuController {
     private ChatLieuService chatLieuService;
 
     @PostMapping
-    public String save(@Valid @RequestBody ChatLieuVO vO) {
-        return chatLieuService.save(vO).toString();
+    public ResponseEntity<ApiResponse<ChatLieuDTO>> save(
+            @Valid @RequestBody ChatLieuVO vO) {;
+        return ResponseHelper.success("Thêm chất liệu thành công!", chatLieuService.save(vO));
     }
 
     @DeleteMapping("/{id}")
@@ -33,9 +37,12 @@ public class ChatLieuController {
     }
 
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody ChatLieuUpdateVO vO) {
+    public ResponseEntity<ApiResponse<ChatLieuDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody ChatLieuUpdateVO vO) {
         chatLieuService.update(id, vO);
+        ChatLieuDTO dto = chatLieuService.getById(id);
+        return ResponseHelper.success("Cập nhật chất liệu thành công!", dto);
     }
 
     @GetMapping("/{id}")

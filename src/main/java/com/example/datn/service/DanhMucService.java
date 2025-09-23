@@ -1,10 +1,13 @@
 package com.example.datn.service;
 
+import com.example.datn.dto.ChatLieuDTO;
 import com.example.datn.dto.DanhMucDTO;
+import com.example.datn.entity.ChatLieu;
 import com.example.datn.entity.DanhMuc;
 import com.example.datn.exception.AppException;
 import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.DanhMucRepository;
+import com.example.datn.vo.chatLieuVO.ChatLieuUpdateVO;
 import com.example.datn.vo.danhMucVO.DanhMucQueryVO;
 import com.example.datn.vo.danhMucVO.DanhMucUpdateVO;
 import com.example.datn.vo.danhMucVO.DanhMucVO;
@@ -23,15 +26,37 @@ public class DanhMucService {
     @Autowired
     private DanhMucRepository danhMucRepository;
 
-    public Integer save(DanhMucVO vO) {
+    public DanhMucDTO save(DanhMucVO vO) {
+        if (vO.getTenDanhMuc() == null || vO.getTenDanhMuc().trim().isEmpty()) {
+            throw new AppException(ErrorCode.DANHMUC_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenDanhMuc().length() > 50) {
+            throw new AppException(ErrorCode.DANHMUC_NAME_TOO_LONG,
+                    ErrorCode.DANHMUC_NAME_TOO_LONG.getErrorMessage(50));
+        }
+        // Kiểm tra trùng tên
+        if (danhMucRepository.existsByTenDanhMuc(vO.getTenDanhMuc().trim())) {
+            throw new AppException(ErrorCode.DANHMUC_NAME_DUPLICATE);
+        }
+        Integer maxCode = danhMucRepository.findMaxMaDanhMucCode();
+        int nextCode = (maxCode != null ? maxCode : 0) + 1;
+        String maDanhMuc = String.format("DM%04d", nextCode);
+
         DanhMuc bean = new DanhMuc();
 
-        if ( danhMucRepository.existsDanhMucByTenDanhMuc(vO.getTenDanhMuc())){
+        if ( danhMucRepository.existsByTenDanhMuc(vO.getTenDanhMuc())){
             throw new AppException(ErrorCode.THE_DIRECTORY_ALREADY_EXISTS);
         }
         BeanUtils.copyProperties(vO, bean);
+        bean.setMaDanhMuc(maDanhMuc);
+        bean.setTrangThai(1);
         bean = danhMucRepository.save(bean);
-        return bean.getId();
+
+        // Trả về DTO luôn, hoặc nếu muốn trả về id thì return bean.getId();
+        DanhMucDTO dto = new DanhMucDTO();
+        BeanUtils.copyProperties(bean, dto);
+        return dto;
     }
 
     public void delete(Integer id) {
@@ -40,6 +65,21 @@ public class DanhMucService {
 
     public void update(Integer id, DanhMucUpdateVO vO) {
         DanhMuc bean = requireOne(id);
+        // Kiểm tra trống
+        if (vO.getTenDanhMuc() == null || vO.getTenDanhMuc().trim().isEmpty()) {
+            throw new AppException(ErrorCode.DANHMUC_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenDanhMuc().length() > 50) {
+            throw new AppException(ErrorCode.DANHMUC_NAME_TOO_LONG,
+                    String.format(ErrorCode.DANHMUC_NAME_TOO_LONG.getErrorMessage(), 50));
+        }
+        // Kiểm tra trùng tên (trừ chính bản ghi đang sửa)
+        String newName = vO.getTenDanhMuc().trim();
+        if (danhMucRepository.existsByTenDanhMuc(newName)
+                && !bean.getTenDanhMuc().equalsIgnoreCase(newName)) {
+            throw new AppException(ErrorCode.DANHMUC_NAME_DUPLICATE);
+        }
         BeanUtils.copyProperties(vO, bean);
         danhMucRepository.save(bean);
     }

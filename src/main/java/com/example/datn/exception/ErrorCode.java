@@ -56,9 +56,43 @@ public enum ErrorCode {
     THE_SIZE_ALREADY_EXISTS(1021, "Kích thước đã tồn tại", HttpStatus.BAD_REQUEST),
     THE_COLOR_ALREADY_EXISTS(1022, "Màu sắc đã tồn tại", HttpStatus.BAD_REQUEST),
     TAY_AO_ALREADY_EXISTS(1023, "Tay áo đã tồn tại", HttpStatus.BAD_REQUEST),
-    PHIEU_GIAM_GIA_EXISTS(400,"Tên phiếu giảm giá đã tồn tại", HttpStatus.BAD_REQUEST),
     CO_AO_ALREADY_EXISTS(1023, "Cổ áo đã tồn tại", HttpStatus.BAD_REQUEST),
-   PRODUCT_ALREADY_EXISTS(1024, "Sản phẩm đã tồn tại", HttpStatus.BAD_REQUEST);
+
+    CHATLIEU_NAME_EMPTY(3001, "Tên chất liệu không được để trống!", HttpStatus.BAD_REQUEST),
+    CHATLIEU_NAME_TOO_LONG(3002, "Tên chất liệu không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    CHATLIEU_NAME_DUPLICATE(3003, "Tên chất liệu đã tồn tại!", HttpStatus.BAD_REQUEST),
+    CHATLIEU_NOT_FOUND(3004, "Chất liệu không tồn tại!", HttpStatus.NOT_FOUND),
+
+    DANHMUC_NAME_EMPTY(3001, "Tên danh mục không được để trống!", HttpStatus.BAD_REQUEST),
+    DANHMUC_NAME_TOO_LONG(3002, "Tên danh mục không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    DANHMUC_NAME_DUPLICATE(3003, "Tên danh mục đã tồn tại!", HttpStatus.BAD_REQUEST),
+    DANHMUC_NOT_FOUND(3004, "Danh mục không tồn tại!", HttpStatus.NOT_FOUND),
+
+    COAO_NAME_EMPTY(3001, "Tên cổ áo  không được để trống!", HttpStatus.BAD_REQUEST),
+    COAO_NAME_TOO_LONG(3002, "Tên cổ áo không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    COAO_NAME_DUPLICATE(3003, "Tên cổ áo đã tồn tại!", HttpStatus.BAD_REQUEST),
+    COAO_NOT_FOUND(3004, "Cổ áo không tồn tại!", HttpStatus.NOT_FOUND),
+
+    KICHCO_NAME_EMPTY(3001, "Tên kích cỡ  không được để trống!", HttpStatus.BAD_REQUEST),
+    KICHCO_NAME_TOO_LONG(3002, "Tên kích cỡ không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    KICHCO_NAME_DUPLICATE(3003, "Tên kích cỡ đã tồn tại!", HttpStatus.BAD_REQUEST),
+    KICHCO_NOT_FOUND(3004, "Kích cỡ không tồn tại!", HttpStatus.NOT_FOUND),
+
+    TAYAO_NAME_EMPTY(3001, "Tên tay áo không được để trống!", HttpStatus.BAD_REQUEST),
+    TAYAO_NAME_TOO_LONG(3002, "Tên tay áo không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    TAYAO_NAME_DUPLICATE(3003, "Tên tay áo đã tồn tại!", HttpStatus.BAD_REQUEST),
+    TAYAO_NOT_FOUND(3004, "Tay áo không tồn tại!", HttpStatus.NOT_FOUND),
+
+    THUONGHIEU_NAME_EMPTY(3001, "Tên thương hiệu không được để trống!", HttpStatus.BAD_REQUEST),
+    THUONGHIEU_NAME_TOO_LONG(3002, "Tên thương hiệu không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    THUONGHIEU_NAME_DUPLICATE(3003, "Tên thương hiệu đã tồn tại!", HttpStatus.BAD_REQUEST),
+    THUONGHIEU_NOT_FOUND(3004, "Thương hiệu không tồn tại!", HttpStatus.NOT_FOUND),
+
+    MAUSAC_NAME_EMPTY(3001, "Tên màu sắc không được để trống!", HttpStatus.BAD_REQUEST),
+    MAUSAC_NAME_TOO_LONG(3002, "Tên màu sắc không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    MAUSAC_NAME_DUPLICATE(3003, "Tên màu sắc đã tồn tại!", HttpStatus.BAD_REQUEST),
+    MAUSAC_NOT_FOUND(3004, "Màu sắc không tồn tại!", HttpStatus.NOT_FOUND);
+
 
 
     private final int errorCode;

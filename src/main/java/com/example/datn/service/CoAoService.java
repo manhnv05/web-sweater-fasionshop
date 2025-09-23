@@ -1,13 +1,17 @@
 package com.example.datn.service;
 
 import com.example.datn.dto.CoAoDTO;
+import com.example.datn.dto.DanhMucDTO;
 import com.example.datn.entity.CoAo;
+import com.example.datn.entity.DanhMuc;
 import com.example.datn.exception.AppException;
 import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.CoAoRepository;
 import com.example.datn.vo.coAoVO.CoAoQueryVO;
 import com.example.datn.vo.coAoVO.CoAoUpdateVO;
 import com.example.datn.vo.coAoVO.CoAoVO;
+import com.example.datn.vo.danhMucVO.DanhMucUpdateVO;
+import com.example.datn.vo.danhMucVO.DanhMucVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -23,14 +27,37 @@ public class CoAoService {
     @Autowired
     private CoAoRepository coAoRepository;
 
-    public Integer save(CoAoVO vO) {
+    public CoAoDTO save(CoAoVO vO) {
+        if (vO.getTenCoAo() == null || vO.getTenCoAo().trim().isEmpty()) {
+            throw new AppException(ErrorCode.COAO_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenCoAo().length() > 50) {
+            throw new AppException(ErrorCode.COAO_NAME_TOO_LONG,
+                    ErrorCode.COAO_NAME_TOO_LONG.getErrorMessage(50));
+        }
+        // Kiểm tra trùng tên
+        if (coAoRepository.existsByTenCoAo(vO.getTenCoAo().trim())) {
+            throw new AppException(ErrorCode.COAO_NAME_DUPLICATE);
+        }
+        Integer maxCode = coAoRepository.findMaxMaCoAoCode();
+        int nextCode = (maxCode != null ? maxCode : 0) + 1;
+        String maCoAo = String.format("CA%04d", nextCode);
+
         CoAo bean = new CoAo();
-        if (coAoRepository.existsByTenCoAo(vO.getTenCoAo())){
-            throw  new AppException(ErrorCode.CO_AO_ALREADY_EXISTS);
+
+        if ( coAoRepository.existsByTenCoAo(vO.getTenCoAo())){
+            throw new AppException(ErrorCode.CO_AO_ALREADY_EXISTS);
         }
         BeanUtils.copyProperties(vO, bean);
+        bean.setMa(maCoAo);
+        bean.setTrangThai(1);
         bean = coAoRepository.save(bean);
-        return bean.getId();
+
+        // Trả về DTO luôn, hoặc nếu muốn trả về id thì return bean.getId();
+        CoAoDTO dto = new CoAoDTO();
+        BeanUtils.copyProperties(bean, dto);
+        return dto;
     }
 
     public void delete(Integer id) {
@@ -39,6 +66,21 @@ public class CoAoService {
 
     public void update(Integer id, CoAoUpdateVO vO) {
         CoAo bean = requireOne(id);
+        // Kiểm tra trống
+        if (vO.getTenCoAo() == null || vO.getTenCoAo().trim().isEmpty()) {
+            throw new AppException(ErrorCode.COAO_NAME_EMPTY);
+        }
+        // Kiểm tra quá ký tự
+        if (vO.getTenCoAo().length() > 50) {
+            throw new AppException(ErrorCode.COAO_NAME_TOO_LONG,
+                    String.format(ErrorCode.COAO_NAME_TOO_LONG.getErrorMessage(), 50));
+        }
+        // Kiểm tra trùng tên (trừ chính bản ghi đang sửa)
+        String newName = vO.getTenCoAo().trim();
+        if (coAoRepository.existsByTenCoAo(newName)
+                && !bean.getTenCoAo().equalsIgnoreCase(newName)) {
+            throw new AppException(ErrorCode.COAO_NAME_DUPLICATE);
+        }
         BeanUtils.copyProperties(vO, bean);
         coAoRepository.save(bean);
     }

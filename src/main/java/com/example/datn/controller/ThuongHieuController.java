@@ -1,7 +1,12 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
+import com.example.datn.dto.TayAoDTO;
 import com.example.datn.dto.ThuongHieuDTO;
 import com.example.datn.service.ThuongHieuService;
+import com.example.datn.vo.tayAoVO.TayAoUpdateVO;
+import com.example.datn.vo.tayAoVO.TayAoVO;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuQueryVO;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuUpdateVO;
 import com.example.datn.vo.thuongHieuVO.ThuongHieuVO;
@@ -9,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,19 +29,22 @@ public class ThuongHieuController {
     private ThuongHieuService thuongHieuService;
 
     @PostMapping
-    public String save(@Valid @RequestBody ThuongHieuVO vO) {
-        return thuongHieuService.save(vO).toString();
+    public ResponseEntity<ApiResponse<ThuongHieuDTO>> save(
+            @Valid @RequestBody ThuongHieuVO vO) {;
+        return ResponseHelper.success("Thêm thương hiệu thành công!", thuongHieuService.save(vO));
     }
-
     @DeleteMapping("/{id}")
     public void delete(@Valid @NotNull @PathVariable("id") Integer id) {
         thuongHieuService.delete(id);
     }
 
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody ThuongHieuUpdateVO vO) {
+    public ResponseEntity<ApiResponse<ThuongHieuDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody ThuongHieuUpdateVO vO) {
         thuongHieuService.update(id, vO);
+        ThuongHieuDTO dto = thuongHieuService.getById(id);
+        return ResponseHelper.success("Cập nhật thương hiệu thành công!", dto);
     }
 
     @GetMapping("/{id}")
