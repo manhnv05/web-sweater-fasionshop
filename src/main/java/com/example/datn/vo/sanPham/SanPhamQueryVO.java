@@ -12,6 +12,7 @@ public class SanPhamQueryVO implements Serializable {
     private Integer idDanhMuc;
     private String maSanPham;
     private String tenSanPham;
+    private String moTa;
     private Integer trangThai;
 
     private Integer page;

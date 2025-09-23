@@ -1,14 +1,20 @@
 package com.example.datn.controller;
 
+import com.example.datn.config.ResponseHelper;
+import com.example.datn.dto.ApiResponse;
 import com.example.datn.dto.SanPhamDTO;
+import com.example.datn.dto.TayAoDTO;
 import com.example.datn.service.SanPhamService;
 import com.example.datn.vo.sanPham.SanPhamUpdateVO;
 import com.example.datn.vo.sanPham.SanPhamQueryVO;
 import com.example.datn.vo.sanPham.SanPhamVO;
+import com.example.datn.vo.tayAoVO.TayAoUpdateVO;
+import com.example.datn.vo.tayAoVO.TayAoVO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,19 +29,23 @@ public class SanPhamController {
     private SanPhamService sanPhamService;
 
     @PostMapping
-    public String save(@Valid @RequestBody SanPhamVO vO) {
-        return sanPhamService.save(vO).toString();
+    public ResponseEntity<ApiResponse<SanPhamDTO>> save(
+            @Valid @RequestBody SanPhamVO vO) {;
+        return ResponseHelper.success("Thêm sản phẩm thành công!", sanPhamService.save(vO));
     }
-
     @DeleteMapping("/{id}")
     public void delete(@Valid @NotNull @PathVariable("id") Integer id) {
         sanPhamService.delete(id);
     }
 
+
     @PutMapping("/{id}")
-    public void update(@Valid @NotNull @PathVariable("id") Integer id,
-                       @Valid @RequestBody SanPhamUpdateVO vO) {
+    public ResponseEntity<ApiResponse<SanPhamDTO>> update(
+            @Valid @NotNull @PathVariable("id") Integer id,
+            @Valid @RequestBody SanPhamUpdateVO vO) {
         sanPhamService.update(id, vO);
+        SanPhamDTO dto = sanPhamService.getById(id);
+        return ResponseHelper.success("Cập nhật sản phẩm thành công!", dto);
     }
 
     @GetMapping("/{id}")

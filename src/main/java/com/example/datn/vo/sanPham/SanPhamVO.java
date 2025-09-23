@@ -17,13 +17,14 @@ public class SanPhamVO implements Serializable {
     @NotNull(message = "Danh mục không được để trống")
     private Integer idDanhMuc;
 
-    @NotBlank(message = "Mã sản phẩm không được để trống")
-    @Size(max = 50, message = "Mã sản phẩm không được quá 50 ký tự")
     private String maSanPham;
 
     @NotBlank(message = "Tên sản phẩm không được để trống")
     @Size(max = 255, message = "Tên sản phẩm không được quá 255 ký tự")
     private String tenSanPham;
+
+
+    private String moTa;
 
     @NotNull(message = "Trạng thái không được để trống")
     @Min(value = 0, message = "Trạng thái không hợp lệ")

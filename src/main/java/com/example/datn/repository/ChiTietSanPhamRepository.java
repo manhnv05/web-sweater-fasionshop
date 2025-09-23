@@ -81,5 +81,5 @@ public interface ChiTietSanPhamRepository extends JpaRepository<ChiTietSanPham, 
     List<ChiTietSanPham> findBySanPhamIdAndTrangThai(Integer sanPhamId, int trangThai);
 
     boolean existsBySanPham_TenSanPham(String sanPhamTenSanPham);
-    
+
 }

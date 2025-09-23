@@ -260,7 +260,6 @@ function ProductForm() {
                 }
                 setMaterialOptions(opts);
                 if (opts[0]) setSelectedMaterial(opts[0].value);
-                
             })
             .catch(() => setMaterialOptions([]));
     }, []);
@@ -753,21 +752,11 @@ function ProductForm() {
                 body: JSON.stringify(productData),
                 credentials: "include",
             });
-            // if (!res.ok) throw new Error("Lỗi khi thêm sản phẩm mới");
-          
-            const result = await res.json(); 
-          if (typeof result === "object" && result.code !== 200) {
-        const errorMsg = result.message || result.data?.error || "Lỗi khi thêm sản phẩm mới";
-        throw new Error(errorMsg);
-    }
+            if (!res.ok) throw new Error("Lỗi khi thêm sản phẩm mới");
+            await res.json();
+            setAddSuccess("Thêm sản phẩm mới thành công!");
+            toast.success("Thêm sản phẩm mới thành công!");
 
-    // Nếu result là số => thành công
-    if (typeof result === "number") {
-        setAddSuccess("Thêm sản phẩm mới thành công! ");
-        toast.success("Thêm sản phẩm mới thành công!");
-    } else {
-        throw new Error("Phản hồi không hợp lệ từ server");
-    }
             setTimeout(() => {
                 setShowAddProductModal(false);
                 setAddSuccess("");
@@ -786,8 +775,8 @@ function ProductForm() {
                     });
             }, 1200);
         } catch (err) {
-            setAddError(err.message);
-            toast.error(err.message);
+            setAddError("Thêm sản phẩm mới thất bại!");
+            toast.error("Thêm sản phẩm mới thất bại!");
         }
         setAddProductLoading(false);
     };

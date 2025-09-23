@@ -118,5 +118,8 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer>, JpaS
             "WHERE sp.trangThai IN (0,1) AND (ctsp.trangThai = 1 OR ctsp IS NULL) AND kt.tenKichCo IS NOT NULL")
     List<String> findDistinctKichThuoc();
 
-    boolean existsSanPhamByTenSanPham(String tenSanPham);
+    boolean existsByTenSanPham(String tenSanPham);
+
+    @Query("SELECT MAX(CAST(SUBSTRING(sp.maSanPham, 3) AS int)) FROM SanPham sp WHERE sp.maSanPham LIKE 'SP____'")
+    Integer findMaxSanPhamCode();
 }

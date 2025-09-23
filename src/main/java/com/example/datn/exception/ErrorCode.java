@@ -57,6 +57,8 @@ public enum ErrorCode {
     THE_COLOR_ALREADY_EXISTS(1022, "Màu sắc đã tồn tại", HttpStatus.BAD_REQUEST),
     TAY_AO_ALREADY_EXISTS(1023, "Tay áo đã tồn tại", HttpStatus.BAD_REQUEST),
     CO_AO_ALREADY_EXISTS(1023, "Cổ áo đã tồn tại", HttpStatus.BAD_REQUEST),
+    PHIEU_GIAM_GIA_EXISTS(400,"Tên phiếu giảm giá đã tồn tại", HttpStatus.BAD_REQUEST),
+
 
     CHATLIEU_NAME_EMPTY(3001, "Tên chất liệu không được để trống!", HttpStatus.BAD_REQUEST),
     CHATLIEU_NAME_TOO_LONG(3002, "Tên chất liệu không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
@@ -87,6 +89,12 @@ public enum ErrorCode {
     THUONGHIEU_NAME_TOO_LONG(3002, "Tên thương hiệu không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
     THUONGHIEU_NAME_DUPLICATE(3003, "Tên thương hiệu đã tồn tại!", HttpStatus.BAD_REQUEST),
     THUONGHIEU_NOT_FOUND(3004, "Thương hiệu không tồn tại!", HttpStatus.NOT_FOUND),
+
+
+    SANPHAM_NAME_EMPTY(3001, "Tên sản phẩm không được để trống!", HttpStatus.BAD_REQUEST),
+    SANPHAM_NAME_TOO_LONG(3002, "Tên sản phẩm không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),
+    SANPHAM_NAME_DUPLICATE(3003, "Tên sản phẩm đã tồn tại!", HttpStatus.BAD_REQUEST),
+    SANPHAM_NOT_FOUND(3004, "Sản phẩm không tồn tại!", HttpStatus.NOT_FOUND),
 
     MAUSAC_NAME_EMPTY(3001, "Tên màu sắc không được để trống!", HttpStatus.BAD_REQUEST),
     MAUSAC_NAME_TOO_LONG(3002, "Tên màu sắc không được vượt quá %d ký tự!", HttpStatus.BAD_REQUEST),

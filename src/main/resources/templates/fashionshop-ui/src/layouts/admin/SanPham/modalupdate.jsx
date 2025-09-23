@@ -162,7 +162,7 @@ function ProductDetailUpdateModal({ open, onClose, detail, onSuccess }) {
                 });
                 setImagePreview(urls);
                 setImageFiles([]);
-                setSelectedSystemImages(urls);
+                setSelectedSystemImages([]);
             })
             .catch(() => {
                 setImagePreview([]);

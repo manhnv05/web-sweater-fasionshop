@@ -1,9 +1,11 @@
 package com.example.datn.service;
 
 import com.example.datn.dto.SanPhamDTO;
+import com.example.datn.dto.TayAoDTO;
 import com.example.datn.entity.DanhMuc;
 import com.example.datn.entity.SanPham;
 import com.example.datn.entity.ChiTietSanPham;
+import com.example.datn.entity.TayAo;
 import com.example.datn.exception.AppException;
 import com.example.datn.exception.ErrorCode;
 import com.example.datn.repository.DanhMucRepository;
@@ -12,13 +14,13 @@ import com.example.datn.repository.ChiTietSanPhamRepository;
 import com.example.datn.vo.sanPham.SanPhamQueryVO;
 import com.example.datn.vo.sanPham.SanPhamUpdateVO;
 import com.example.datn.vo.sanPham.SanPhamVO;
+import com.example.datn.vo.tayAoVO.TayAoUpdateVO;
+import com.example.datn.vo.tayAoVO.TayAoVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import jakarta.validation.Valid;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,38 +42,68 @@ public class SanPhamService {
         List<SanPham> list = sanPhamRepository.findActiveSanPhamOrderByIdDesc();
         return list.stream().limit(limit).map(this::toDTO).collect(Collectors.toList());
     }
-@Transactional
-    public Integer save(@Valid SanPhamVO vO) {
-        if (sanPhamRepository.existsSanPhamByTenSanPham(vO.getTenSanPham())) {
-            throw new AppException(ErrorCode.PRODUCT_ALREADY_EXISTS);
+
+    public SanPhamDTO save(SanPhamVO vO) {
+        // Kiểm tra trống
+        if (vO.getTenSanPham() == null || vO.getTenSanPham().trim().isEmpty()) {
+            throw new AppException(ErrorCode.SANPHAM_NAME_EMPTY);
         }
+        // Kiểm tra quá ký tự
+        if (vO.getTenSanPham().length() > 50) {
+            throw new AppException(ErrorCode.SANPHAM_NAME_TOO_LONG,
+                    ErrorCode.SANPHAM_NAME_TOO_LONG.getErrorMessage(50));
+        }
+
+        if (sanPhamRepository.existsByTenSanPham(vO.getTenSanPham().trim())) {
+            throw new AppException(ErrorCode.SANPHAM_NAME_DUPLICATE);
+        }
+
+        Integer maxCode = sanPhamRepository.findMaxSanPhamCode();
+        int nextCode = (maxCode != null ? maxCode : 0) + 1;
+        String maSanPham = String.format("SP%04d", nextCode);
+
         SanPham bean = new SanPham();
-        bean.setMaSanPham(vO.getMaSanPham());
-        bean.setTenSanPham(vO.getTenSanPham());
-        bean.setXuatXu(vO.getXuatXu());
-        bean.setTrangThai(vO.getTrangThai());
+        BeanUtils.copyProperties(vO, bean);
+        bean.setMaSanPham(maSanPham);
         if (vO.getIdDanhMuc() != null) {
             DanhMuc danhMuc = danhMucRepository.findById(vO.getIdDanhMuc()).orElse(null);
             bean.setDanhMuc(danhMuc);
         }
+        bean.setTrangThai(1);
         bean = sanPhamRepository.save(bean);
-        return bean.getId();
+
+        SanPhamDTO dto = new SanPhamDTO();
+        BeanUtils.copyProperties(bean, dto);
+        return dto;
     }
 
     public void delete(Integer id) {
         sanPhamRepository.softDeleteById(id);
     }
 
-    public void update(Integer id, @Valid SanPhamUpdateVO vO) {
+
+    public void update(Integer id, SanPhamUpdateVO vO) {
         SanPham bean = requireOne(id);
-        bean.setMaSanPham(vO.getMaSanPham());
-        bean.setTenSanPham(vO.getTenSanPham());
-        bean.setXuatXu(vO.getXuatXu());
-        bean.setTrangThai(vO.getTrangThai());
-        if (vO.getIdDanhMuc() != null) {
-            DanhMuc danhMuc = danhMucRepository.findById(vO.getIdDanhMuc()).orElse(null);
-            bean.setDanhMuc(danhMuc);
+        // Kiểm tra trống
+        if (vO.getTenSanPham() == null || vO.getTenSanPham().trim().isEmpty()) {
+            throw new AppException(ErrorCode.SANPHAM_NAME_EMPTY);
         }
+        // Kiểm tra quá ký tự
+        if (vO.getTenSanPham().length() > 50) {
+            throw new AppException(ErrorCode.SANPHAM_NAME_TOO_LONG,
+                    String.format(ErrorCode.SANPHAM_NAME_TOO_LONG.getErrorMessage(), 50));
+        }
+        // Kiểm tra trùng tên (trừ chính bản ghi đang sửa)
+        String newName = vO.getTenSanPham().trim();
+        if (sanPhamRepository.existsByTenSanPham(newName)
+                && !bean.getTenSanPham().equalsIgnoreCase(newName)) {
+            throw new AppException(ErrorCode.SANPHAM_NAME_DUPLICATE);
+        }
+        if (vO.getIdDanhMuc() != null) {
+                DanhMuc danhMuc = danhMucRepository.findById(vO.getIdDanhMuc()).orElse(null);
+                bean.setDanhMuc(danhMuc);
+        }
+        BeanUtils.copyProperties(vO, bean);
         sanPhamRepository.save(bean);
     }
 

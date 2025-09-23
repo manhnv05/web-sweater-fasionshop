@@ -41,7 +41,7 @@ public class SanPham {
     @Column(name = "trang_thai")
     private Integer trangThai;
 
-    @Column(name = "mo_ta", length = 255)
+    @Column(name = "mo_ta", columnDefinition = "TEXT")
     private String moTa;
 
     @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)

@@ -14,6 +14,7 @@ public class SanPhamDTO implements Serializable {
 
     private String maSanPham;
     private String tenSanPham;
+    private String moTa;
     private Integer trangThai;
 
     // Thêm trường này để FE nhận được giá của sản phẩm (lấy từ sản phẩm chi tiết)
