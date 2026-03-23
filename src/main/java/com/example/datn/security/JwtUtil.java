@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,16 +28,36 @@ public class JwtUtil {
     @Value("${jwt.expiration:3600000}")
     private long expiration;
 
+    // Refresh token có thời hạn dài hơn access token (mặc định 7 ngày)
+    @Value("${jwt.refresh-expiration:604800000}")
+    private long refreshExpiration;
+
+    @PostConstruct
+    public void validateSecret() {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException(
+                    "jwt.secret phải có ít nhất 32 ký tự (256 bit) để đảm bảo bảo mật HMAC-SHA256");
+        }
+    }
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(String username) {
+        return buildToken(username, expiration);
+    }
+
+    public String generateRefreshToken(String username) {
+        return buildToken(username, refreshExpiration);
+    }
+
+    private String buildToken(String username, long tokenExpiration) {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + tokenExpiration))
                 .signWith(getSigningKey())
                 .compact();
     }

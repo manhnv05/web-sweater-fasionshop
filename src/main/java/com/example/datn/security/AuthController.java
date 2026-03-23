@@ -112,9 +112,9 @@ public class AuthController {
         }
         // -----------------------------------
 
-        // Sinh access token và refresh token JWT
+        // Sinh access token (thời hạn ngắn) và refresh token (thời hạn dài)
         String accessToken = jwtUtil.generateToken(username);
-        String refreshToken = jwtUtil.generateToken(username);
+        String refreshToken = jwtUtil.generateRefreshToken(username);
 
         // Set refresh token vào httpOnly cookie
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
