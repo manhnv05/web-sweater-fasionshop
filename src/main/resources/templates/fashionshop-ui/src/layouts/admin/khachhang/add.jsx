@@ -28,7 +28,7 @@ import "react-toastify/dist/ReactToastify.css";
 import EmailIcon from "@mui/icons-material/Email";
 import Autocomplete from "@mui/material/Autocomplete";
 const GHN_API_BASE_URL = "https://online-gateway.ghn.vn/shiip/public-api/master-data";
-const GHN_API_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0"; // Token GHN của bạn
+const GHN_API_TOKEN = process.env.REACT_APP_GHN_TOKEN; // Token GHN của bạn
 const GHN_API_CONFIG = {
   headers: {
     token: GHN_API_TOKEN,

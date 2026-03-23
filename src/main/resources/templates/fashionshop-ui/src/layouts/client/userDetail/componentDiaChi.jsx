@@ -24,7 +24,7 @@ const SOFT_BADGE_TEXT = "#fff";
 const SOFT_CARD_SHADOW = "0 8px 32px #2563eb1a";
 const API_BASE_URL = "http://localhost:8080";
 const GHN_API_BASE_URL = "https://online-gateway.ghn.vn/shiip/public-api/master-data";
-const GHN_API_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0";
+const GHN_API_TOKEN = process.env.REACT_APP_GHN_TOKEN;
 const GHN_API_CONFIG = { headers: { token: GHN_API_TOKEN } };
 
 // --- Styled Components ---

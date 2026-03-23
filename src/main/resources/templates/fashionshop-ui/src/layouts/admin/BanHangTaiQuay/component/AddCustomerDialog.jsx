@@ -25,7 +25,7 @@ import PropTypes from "prop-types";
 
 // === THAY ĐỔI: API ENDPOINTS CỦA GIAO HÀNG NHANH ===
 const GHN_API_BASE_URL = "https://online-gateway.ghn.vn/shiip/public-api/master-data";
-const GHN_API_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0"; // <<< !!! THAY THẾ BẰNG TOKEN CỦA BẠN !!!
+const GHN_API_TOKEN = process.env.REACT_APP_GHN_TOKEN; // <<< !!! THAY THẾ BẰNG TOKEN CỦA BẠN !!!
 
 const GHN_API_CONFIG = {
   headers: {

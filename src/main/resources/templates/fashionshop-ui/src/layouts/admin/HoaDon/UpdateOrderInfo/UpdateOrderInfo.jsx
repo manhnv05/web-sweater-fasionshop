@@ -25,7 +25,7 @@ import "react-toastify/dist/ReactToastify.css";
 // --- GHN API Configuration ---
 const GHN_API_BASE_URL = "https://online-gateway.ghn.vn/shiip/public-api";
 // IMPORTANT: Replace with your actual GHN Token and Shop ID
-const GHN_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0"; // Example Token
+const GHN_TOKEN = process.env.REACT_APP_GHN_TOKEN; // Example Token
 const GHN_SHOP_ID = 5908591; // Example Shop ID
 
 const ghnApi = axios.create({

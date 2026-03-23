@@ -89,7 +89,7 @@ function Pay({
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [invoiceToPrintId, setInvoiceToPrintId] = useState(null);
   const GHN_API_BASE_URL = "https://online-gateway.ghn.vn/shiip/public-api";
-  const GHN_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0";
+  const GHN_TOKEN = process.env.REACT_APP_GHN_TOKEN;
   const ghnApi = axios.create({
     baseURL: GHN_API_BASE_URL,
     headers: {

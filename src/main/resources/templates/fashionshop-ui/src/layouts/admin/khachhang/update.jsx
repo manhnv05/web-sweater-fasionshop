@@ -34,7 +34,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import Autocomplete from "@mui/material/Autocomplete";
 
 const GHN_API_BASE_URL = "https://online-gateway.ghn.vn/shiip/public-api/master-data";
-const GHN_API_TOKEN = "03b71be1-6891-11f0-9e03-7626358ab3e0"; // Thay bằng token của bạn
+const GHN_API_TOKEN = process.env.REACT_APP_GHN_TOKEN; // Thay bằng token của bạn
 const GHN_API_CONFIG = { headers: { token: GHN_API_TOKEN } };
 const khachHangDetailAPI = (id) => `http://localhost:8080/khachHang/${id}`;
 const khachHangUpdateAPI = (id) => `http://localhost:8080/khachHang/${id}`;
