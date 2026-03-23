@@ -8,6 +8,8 @@ import com.example.datn.service.VNPayService;
 import com.example.datn.vo.chiTietThanhToanVO.ChiTietThanhToanVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +21,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/vnpay")
 public class VnpayController {
+
+    private static final Logger logger = LoggerFactory.getLogger(VnpayController.class);
+
     @Autowired
     private VNPayService vnPayService;
+
+    @Autowired
+    private VNPayConfig vnPayConfig;
 
     @Autowired
     private HoaDonService hoaDonService;
@@ -44,11 +52,11 @@ public class VnpayController {
         String promocode = body.get("promocode").toString();
         String locale = body.get("locale").toString();
 
-        String urlReturn = body.containsKey("urlReturn") ? body.get("urlReturn").toString() : VNPayConfig.vnp_Returnurl;
+        String urlReturn = body.containsKey("urlReturn") ? body.get("urlReturn").toString() : vnPayConfig.getReturnUrl();
         String vnpayUrl = vnPayService.createOrder(orderTotal, orderInfo, bankcode, ordertype, promocode, locale, urlReturn);
 
-        System.out.println("[submitOrder] orderTotal=" + orderTotal + ", orderInfo=" + orderInfo + ", bankcode=" + bankcode +
-                ", ordertype=" + ordertype + ", promocode=" + promocode + ", locale=" + locale + ", baseUrl=" + urlReturn);
+        logger.info("[submitOrder] orderTotal={}, orderInfo={}, bankcode={}, ordertype={}, locale={}",
+                orderTotal, orderInfo, bankcode, ordertype, locale);
 
         // FE sẽ redirect sang link` này
         return "redirect:" + vnpayUrl;
@@ -68,9 +76,8 @@ public class VnpayController {
         String transactionNo = request.getParameter("vnp_TransactionNo");
         String txnRef        = request.getParameter("vnp_TxnRef"); // fallback
 
-        System.out.println("[vnpayCallback] orderInfo(raw)=" + orderInfo + ", paymentStatus=" + paymentStatus +
-                ", bankcode=" + bankcode + ", promocode=" + promocode + ", paymentTime=" + paymentTime +
-                ", amountRaw=" + amountRaw + ", locale=" + locale + ", transactionNo=" + transactionNo + ", txnRef=" + txnRef);
+        logger.info("[vnpayCallback] orderInfo={}, paymentStatus={}, bankcode={}, paymentTime={}, transactionNo={}",
+                orderInfo, paymentStatus, bankcode, paymentTime, transactionNo);
 
         // Chuẩn hóa số tiền (VNPAY trả về nhân 100)
         int amount = 0;
@@ -79,9 +86,9 @@ public class VnpayController {
                 long parsed = Long.parseLong(amountRaw) / 100L;
                 amount = (parsed > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) parsed;
             }
-            System.out.println("[vnpayCallback] amount after normalization: " + amount);
+            logger.debug("[vnpayCallback] amount sau chuẩn hóa: {}", amount);
         } catch (NumberFormatException e) {
-            System.err.println("[vnpayCallback] Lỗi parse amountRaw: " + amountRaw);
+            logger.error("[vnpayCallback] Lỗi parse amountRaw: {}", amountRaw);
         }
 
         // Fallback mã giao dịch nếu thiếu transactionNo
@@ -97,51 +104,45 @@ public class VnpayController {
 
         // Chỉ xử lý lưu DB khi thanh toán hợp lệ
         if (paymentStatus != 1) {
-            System.err.println("[vnpayCallback] paymentStatus != 1, trả về orderfail");
+            logger.warn("[vnpayCallback] paymentStatus != 1, trả về orderfail");
             return "orderfail";
         }
 
         try {
-            // FE đã gửi id hóa đơn trong vnp_OrderInfo
             String decodedOrderInfo = URLDecoder.decode(orderInfo, StandardCharsets.UTF_8.name());
-            System.out.println("[vnpayCallback] decodedOrderInfo=" + decodedOrderInfo);
+            logger.debug("[vnpayCallback] decodedOrderInfo={}", decodedOrderInfo);
 
             int hoaDonId = Integer.parseInt(decodedOrderInfo);
-            System.out.println("[vnpayCallback] hoaDonId=" + hoaDonId);
+            logger.debug("[vnpayCallback] hoaDonId={}", hoaDonId);
 
             HoaDonDTO hoaDonDTO = hoaDonService.getHoaDonById(hoaDonId);
-            System.out.println("[vnpayCallback] hoaDonDTO=" + hoaDonDTO);
 
             if (hoaDonDTO == null) {
-                System.err.println("[vnpayCallback] Không tìm thấy hóa đơn với id=" + hoaDonId);
+                logger.error("[vnpayCallback] Không tìm thấy hóa đơn với id={}", hoaDonId);
                 return "orderfail";
             }
 
-            // Idempotent: tránh lưu trùng theo (id hóa đơn, mã giao dịch)
             boolean existed = chiTietThanhToanService
                     .getChiTietThanhToanByHoaDonId(hoaDonId)
                     .stream()
                     .anyMatch(ct -> transactionId != null && transactionId.equals(ct.getMaGiaoDich()));
-            System.out.println("[vnpayCallback] existed=" + existed + ", transactionId=" + transactionId);
 
             if (!existed) {
                 ChiTietThanhToanVO vo = new ChiTietThanhToanVO();
                 vo.setIdHoaDon(hoaDonDTO.getId());
-                vo.setIdHinhThucThanhToan(2); // 2 = VNPAY
+                vo.setIdHinhThucThanhToan(2);
                 vo.setMaGiaoDich(transactionId);
                 vo.setSoTienThanhToan(amount);
-                vo.setTrangThaiThanhToan(1); // 1 = đã thanh toán thành công
+                vo.setTrangThaiThanhToan(1);
                 vo.setGhiChu("Thanh toán qua VNPAY");
 
-                System.out.println("[vnpayCallback] Lưu chi tiết thanh toán: " + vo);
                 chiTietThanhToanService.save(vo);
             }
 
-            System.out.println("[vnpayCallback] Thanh toán thành công, trả về ordersuccess");
+            logger.info("[vnpayCallback] Thanh toán thành công, hoaDonId={}", hoaDonId);
             return "ordersuccess";
         } catch (Exception ex) {
-            ex.printStackTrace();
-            System.err.println("[vnpayCallback] Exception: " + ex.getMessage());
+            logger.error("[vnpayCallback] Exception: {}", ex.getMessage(), ex);
             return "orderfail";
         }
     }

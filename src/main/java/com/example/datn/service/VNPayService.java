@@ -3,6 +3,7 @@ package com.example.datn.service;
 import com.example.datn.config.VNPayConfig;
 import com.example.datn.service.impl.HoaDonServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -14,13 +15,16 @@ import java.util.*;
 @Service
 public class VNPayService {
 
+    @Autowired
+    private VNPayConfig vnPayConfig;
+
     // Tạo URL thanh toán VNPAY
     public String createOrder(int total, String orderInfor, String bankcode, String ordertype, String promocode, String locale, String urlReturn) {
         String vnp_Version = "2.1.1";
         String vnp_Command = "pay";
         String vnp_TxnRef = HoaDonServiceImpl.generateShortRandomMaHoaDonUUID();
-        String vnp_IpAddr = "127.0.0.1"; // Nên lấy từ request thật nếu có
-        String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
+        String vnp_IpAddr = "127.0.0.1";
+        String vnp_TmnCode = vnPayConfig.getTmnCode();
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -69,9 +73,9 @@ public class VNPayService {
             }
         }
         String queryUrl = query.toString();
-        String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
+        String vnp_SecureHash = VNPayConfig.hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+        String paymentUrl = vnPayConfig.getPayUrl() + "?" + queryUrl;
         return paymentUrl;
     }
 
@@ -95,7 +99,7 @@ public class VNPayService {
         fields.remove("vnp_SecureHash");
 
         // Hash lại toàn bộ fields (đúng thứ tự alphabet key)
-        String signValue = VNPayConfig.hashAllFields(fields);
+        String signValue = vnPayConfig.hashAllFields(fields);
 
         // So sánh chữ ký hợp lệ
         if (signValue.equals(vnp_SecureHash)) {

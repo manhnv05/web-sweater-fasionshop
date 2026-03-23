@@ -12,6 +12,7 @@ import com.example.datn.vo.clientVO.ChangePasswordDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -48,13 +49,15 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Value("${cookie.secure:false}")
+    private boolean cookieSecure;
+
     // Lưu mã xác nhận quên mật khẩu (tạm thời, production nên lưu DB/Redis)
     private final Map<String, String> passwordResetCodes = new ConcurrentHashMap<>();
     private final Random random = new Random();
-
-    // TODO: Inject your JwtUtil or TokenService here if you use JWT for token generation
-    // @Autowired
-    // private JwtUtil jwtUtil;
 
     /**
      * Xử lý API đăng nhập (trả accessToken cho FE, refreshToken lưu ở httpOnly cookie)
@@ -109,14 +112,14 @@ public class AuthController {
         }
         // -----------------------------------
 
-        // Sinh access token và refresh token (ví dụ dùng JWT)
-        String accessToken = "fake-access-token-for-" + username; // TODO: sinh JWT thực tế ở đây
-        String refreshToken = "fake-refresh-token-for-" + username; // TODO: sinh JWT thực tế ở đây
+        // Sinh access token và refresh token JWT
+        String accessToken = jwtUtil.generateToken(username);
+        String refreshToken = jwtUtil.generateToken(username);
 
         // Set refresh token vào httpOnly cookie
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false) // đổi thành true khi chạy với HTTPS
+                .secure(cookieSecure)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(Duration.ofDays(7))
@@ -209,7 +212,7 @@ public class AuthController {
     public ResponseEntity<?> logout(HttpServletResponse response) {
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(0)

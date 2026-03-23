@@ -8,7 +8,12 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3307/datn1
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: Manhnguyen2:)
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET}
     networks:
       - spring-net
 
@@ -17,7 +22,7 @@ services:
     container_name: mysql-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: Manhnguyen2:)
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: datn1
     ports:
       - "3308:3307"

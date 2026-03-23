@@ -1,6 +1,7 @@
 package com.example.datn.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -12,12 +13,32 @@ import java.util.*;
 
 @Component
 public class VNPayConfig {
-    public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_Returnurl = "http://localhost:3000/payment-result";
-    public static String vnp_IpnUrl = "https://2f8e30484661.ngrok-free.app/api/vnpay/vnpay-payment"; // BE Notify URL
-    public static String vnp_TmnCode = "B56U9WE5";
-    public static String vnp_HashSecret = "3KND9CKSWLYFCFCY8U9X0L8PHAPEGJUF";
-    public static String vnp_apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+
+    @Value("${vnpay.pay-url:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}")
+    private String payUrl;
+
+    @Value("${vnpay.return-url:http://localhost:3000/payment-result}")
+    private String returnUrl;
+
+    @Value("${vnpay.ipn-url:}")
+    private String ipnUrl;
+
+    @Value("${vnpay.tmn-code}")
+    private String tmnCode;
+
+    @Value("${vnpay.hash-secret}")
+    private String hashSecret;
+
+    @Value("${vnpay.api-url:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}")
+    private String apiUrl;
+
+    // Getter methods để các service lấy giá trị
+    public String getPayUrl() { return payUrl; }
+    public String getReturnUrl() { return returnUrl; }
+    public String getIpnUrl() { return ipnUrl; }
+    public String getTmnCode() { return tmnCode; }
+    public String getHashSecret() { return hashSecret; }
+    public String getApiUrl() { return apiUrl; }
 
     public static String md5(String message) {
         String digest = null;
@@ -55,8 +76,8 @@ public class VNPayConfig {
         return digest;
     }
 
-    //Util for VNPAY
-    public static String hashAllFields(Map fields) {
+    // Util for VNPAY
+    public String hashAllFields(Map fields) {
         List fieldNames = new ArrayList(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
@@ -73,7 +94,7 @@ public class VNPayConfig {
                 sb.append("&");
             }
         }
-        return hmacSHA512(vnp_HashSecret,sb.toString());
+        return hmacSHA512(hashSecret, sb.toString());
     }
 
     public static String hmacSHA512(final String key, final String data) {

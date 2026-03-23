@@ -2,6 +2,8 @@ package com.example.datn.security;
 
 import com.example.datn.entity.KhachHang;
 import com.example.datn.repository.KhachHangRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -16,6 +18,8 @@ import java.util.*;
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
+
     @Autowired
     private KhachHangRepository khachHangRepository;
 
@@ -26,25 +30,23 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
-        System.out.println("[OAUTH2] Email: " + email + ", Name: " + name);
+        logger.info("[OAuth2] Đăng nhập: email={}, name={}", email, name);
 
-        // Kiểm tra và tạo mới Khách hàng nếu chưa có
         Optional<KhachHang> khOpt = khachHangRepository.findByEmail(email);
         if (khOpt.isEmpty()) {
             KhachHang kh = new KhachHang();
             kh.setEmail(email);
             kh.setTenKhachHang(name);
             khachHangRepository.save(kh);
-            System.out.println("[OAUTH2] Created new KhachHang: " + email);
+            logger.info("[OAuth2] Tạo mới khách hàng: {}", email);
         } else {
-            System.out.println("[OAUTH2] Existing KhachHang: " + email);
+            logger.info("[OAuth2] Khách hàng đã tồn tại: {}", email);
         }
 
-        // GÁN quyền cho user OAuth2 (luôn là KHACHHANG, nếu có phân quyền khác thì kiểm tra thêm)
         List<GrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority("ROLE_KHACHHANG")
         );
-        System.out.println("[OAUTH2] Authorities: " + authorities);
+        logger.debug("[OAuth2] Authorities: {}", authorities);
 
         // Trả về user có quyền đúng cho Spring Security
         return new DefaultOAuth2User(authorities, oAuth2User.getAttributes(), "email");

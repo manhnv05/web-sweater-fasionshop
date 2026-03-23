@@ -13,7 +13,7 @@ public class CustomPasswordEncoder implements PasswordEncoder {
     @Override
     public String encode(CharSequence rawPassword) {
         String encoded = bCryptPasswordEncoder.encode(rawPassword);
-        logger.debug("Encoded password for [{}]: [{}]", rawPassword, encoded);
+        logger.debug("Đã mã hóa mật khẩu thành công");
         return encoded;
     }
 
@@ -23,13 +23,13 @@ public class CustomPasswordEncoder implements PasswordEncoder {
         // Hỗ trợ mọi định dạng BCrypt
         if (encodedPassword.startsWith("$2a$") || encodedPassword.startsWith("$2b$") || encodedPassword.startsWith("$2y$")) {
             boolean match = bCryptPasswordEncoder.matches(rawPassword, encodedPassword);
-            logger.debug("Matching BCrypt password for [{}]: [{}]", rawPassword, match);
+            logger.debug("Kiểm tra mật khẩu BCrypt: {}", match);
             return match;
         }
-        // WARNING: Không nên dùng đoạn này ở production! Chỉ dùng khi migrate mật khẩu cũ.
+        // Fallback cho mật khẩu plain text (chỉ dùng khi migrate, nên xóa sau khi migrate xong)
         boolean plainMatch = rawPassword != null && rawPassword.toString().equals(encodedPassword);
         if (plainMatch) {
-            logger.warn("Plain text password match for [{}]", rawPassword);
+            logger.warn("Phát hiện mật khẩu plain text, cần migrate sang BCrypt");
         }
         return plainMatch;
     }

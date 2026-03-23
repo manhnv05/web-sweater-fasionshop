@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -26,7 +28,13 @@ public class SecurityConfig {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
-    private CustomOAuth2UserService oAuth2UserService; // Inject Custom OAuth2 User Service
+    private CustomOAuth2UserService oAuth2UserService;
+
+    @Value("${cors.allowed-origins:http://localhost:3000}")
+    private String corsAllowedOrigins;
+
+    @Value("${oauth2.redirect-url:http://localhost:3000/oauth2/redirect}")
+    private String oauth2RedirectUrl;
 
     /**
      * SuccessHandler cho login truyền thống (API/fetch): trả JSON có role
@@ -36,7 +44,7 @@ public class SecurityConfig {
                 .findFirst()
                 .map(auth -> auth.getAuthority().replace("ROLE_", ""))
                 .orElse("KHACHHANG");
-        logger.info("[DEBUG] apiLoginSuccessHandler CALLED, role={}", role);
+        logger.info("apiLoginSuccessHandler: role={}", role);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"message\": \"Login successful\", \"role\": \"" + role + "\"}");
@@ -47,21 +55,17 @@ public class SecurityConfig {
     private final AuthenticationSuccessHandler oauth2SuccessHandler = (request, response, authentication) -> {
         String role = authentication.getAuthorities().stream()
                 .findFirst()
-                .map(auth -> {
-                    logger.info("[DEBUG] oauth2SuccessHandler CALLED, authority={}", auth.getAuthority());
-                    return auth.getAuthority().replace("ROLE_", "");
-                })
+                .map(auth -> auth.getAuthority().replace("ROLE_", ""))
                 .orElse("KHACHHANG");
-        logger.info("[DEBUG] oauth2SuccessHandler ROLE={}, redirecting...", role);
-        String redirectUrl = "http://localhost:3000/oauth2/redirect?role=" + role;
-        logger.info("[DEBUG] oauth2SuccessHandler set Location header: {}", redirectUrl);
+        logger.info("oauth2SuccessHandler: role={}", role);
+        String redirectUrl = oauth2RedirectUrl + "?role=" + role;
         response.setStatus(HttpServletResponse.SC_FOUND);
         response.setHeader("Location", redirectUrl);
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        logger.info("Cấu hình SecurityFilterChain: cho phép đăng nhập truyền thống và OAuth2");
+        logger.info("Cấu hình SecurityFilterChain");
 
         http
                 .cors(Customizer.withDefaults())
@@ -104,9 +108,8 @@ public class SecurityConfig {
                 )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/api/auth/login")
-                        .successHandler(apiLoginSuccessHandler) // trả JSON có role
+                        .successHandler(apiLoginSuccessHandler)
                         .failureHandler((request, response, exception) -> {
-                            logger.info("[DEBUG] formLogin FAILURE HANDLER called");
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
                             response.getWriter().write("{\"message\": \"Login failed\"}");
@@ -142,13 +145,18 @@ public class SecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            logger.info("[DEBUG] exceptionHandling AUTH ENTRYPOINT called");
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
                             response.getWriter().write("{\"message\": \"Unauthorized\"}");
                         })
-                );
+                )
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
     }
 
     @Bean
@@ -159,9 +167,9 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        logger.info("Khởi tạo bean CorsConfigurationSource cho CORS");
+        logger.info("Khởi tạo CorsConfigurationSource, allowed origins: {}", corsAllowedOrigins);
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of(corsAllowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
@@ -174,13 +182,11 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        logger.info("Khởi tạo bean AuthenticationManager");
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public CustomUserDetailsService customUserDetailsService() {
-        logger.info("Khởi tạo bean CustomUserDetailsService");
         return new CustomUserDetailsService();
     }
 }

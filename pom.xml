@@ -151,11 +151,17 @@
             <artifactId>jjwt-api</artifactId>
             <version>0.12.6</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt</artifactId>
+            <artifactId>jjwt-impl</artifactId>
             <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.session</groupId>
