@@ -344,7 +344,7 @@ public class HoaDonServiceImpl implements HoaDonService {
             document.add(table2);
             document.close();
         } catch (DocumentException | IOException e) {
-            e.printStackTrace();
+            log.error("Lỗi khi tạo PDF hóa đơn: {}", e.getMessage(), e);
             throw new RuntimeException("Lỗi khi tạo PDF hóa đơn: " + e.getMessage());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -701,11 +701,11 @@ public class HoaDonServiceImpl implements HoaDonService {
         if (hoaDon.getPhieuGiamGia() != null){
          PhieuGiamGia phieuGiamGia = phieuGiamGiaRepository.findById(hoaDon.getPhieuGiamGia().getId()).orElse(null);
 
-         if (phieuGiamGia.getLoaiPhieu()==0){
+         if (phieuGiamGia != null && phieuGiamGia.getLoaiPhieu()==0){
              phieuGiamGia.setSoLuong(
                      phieuGiamGia.getSoLuong().add(BigDecimal.ONE));
              phieuGiamGiaRepository.save(phieuGiamGia);
-         } else if (phieuGiamGia.getLoaiPhieu()==1) {
+         } else if (phieuGiamGia != null && phieuGiamGia.getLoaiPhieu()==1) {
              ChiTietPhieuGiamGia chiTietPhieuGiamGia = new ChiTietPhieuGiamGia();
              chiTietPhieuGiamGia.setKhachHang(hoaDon.getKhachHang());
              chiTietPhieuGiamGia.setPhieuGiamGia(hoaDon.getPhieuGiamGia());
@@ -733,12 +733,12 @@ public class HoaDonServiceImpl implements HoaDonService {
             orderUpdatePayload.put("trangThaiMoi", TrangThai.HUY.name());
             orderUpdatePayload.put("thongBao", "Đơn hàng " + hoaDon.getMaHoaDon() + " đã được khách hàng hủy.");
 
-            System.out.println("PAYLOAD: " + orderUpdatePayload.toString());
+            log.debug("PAYLOAD: {}", orderUpdatePayload);
             // Gửi thông báo đến kênh của TẤT CẢ admin
             String adminTopic = "/topic/admin/order-updates";
-            System.out.println("CHUẨN BỊ GỬI WEBSOCKET ĐẾN TOPIC: " + adminTopic);
+            log.debug("CHUẨN BỊ GỬI WEBSOCKET ĐẾN TOPIC: {}", adminTopic);
             messagingTemplate.convertAndSend(adminTopic, orderUpdatePayload);
-            System.out.println("ĐÃ GỌI HÀM convertAndSend.");
+            log.debug("ĐÃ GỌI HÀM convertAndSend.");
 
             if (hoaDon.getKhachHang() != null && hoaDon.getKhachHang().getId() != null) {
                 // Lấy ID của khách hàng từ đơn hàng
@@ -748,7 +748,7 @@ public class HoaDonServiceImpl implements HoaDonService {
                 // Cập nhật lại thông báo cho phù hợp với client
                 orderUpdatePayload.put("thongBao", "Đơn hàng #" + hoaDon.getMaHoaDon() + " của bạn đã bị hủy.");
 
-                System.out.println("CHUẨN BỊ GỬI WEBSOCKET ĐẾN CLIENT: " + userTopic);
+                log.debug("CHUẨN BỊ GỬI WEBSOCKET ĐẾN CLIENT: {}", userTopic);
                 messagingTemplate.convertAndSend(userTopic, orderUpdatePayload);
             }
 
@@ -1124,7 +1124,7 @@ public class HoaDonServiceImpl implements HoaDonService {
                 hoaDonDaLuu.getTrangThai()
         );
 // === BẮT ĐẦU GỬI WEBSOCKET ===
-        System.out.println("\n[DEBUG] --- BẮT ĐẦU GỬI WEBSOCKET ---");
+        log.debug("--- BẮT ĐẦU GỬI WEBSOCKET ---");
         Map<String, Object> notificationPayload = new HashMap<>();
         notificationPayload.put("type", "NEW_ORDER");
         notificationPayload.put("idHoaDon", hoaDonDaLuu.getId());
@@ -1133,21 +1133,19 @@ public class HoaDonServiceImpl implements HoaDonService {
         notificationPayload.put("tongHoaDon", hoaDonDaLuu.getTongHoaDon());
         notificationPayload.put("thoiGian", LocalDateTime.now().toString());
 
-        System.out.println("[DEBUG] Payload: " + notificationPayload.toString());
+        log.debug("Payload: {}", notificationPayload);
 
         String adminTopic = "/topic/admin/order-updates";
-        System.out.println("[DEBUG] Topic: " + adminTopic);
+        log.debug("Topic: {}", adminTopic);
 
         try {
-            System.out.println("[DEBUG] Đang gọi messagingTemplate.convertAndSend...");
+            log.debug("Đang gọi messagingTemplate.convertAndSend...");
             messagingTemplate.convertAndSend(adminTopic, notificationPayload);
-            System.out.println("[DEBUG] ĐÃ GỬI WEBSOCKET THÀNH CÔNG.");
+            log.debug("ĐÃ GỬI WEBSOCKET THÀNH CÔNG.");
         } catch (Exception e) {
-            System.out.println("[DEBUG] LỖI KHI GỬI WEBSOCKET: " + e.getMessage());
-            // In ra stack trace để xem chi tiết lỗi
-            e.printStackTrace();
+            log.error("LỖI KHI GỬI WEBSOCKET: {}", e.getMessage(), e);
         }
-        System.out.println("[DEBUG] --- KẾT THÚC GỬI WEBSOCKET ---\n");
+        log.debug("--- KẾT THÚC GỬI WEBSOCKET ---");
         // === KẾT THÚC PHẦN THÊM MỚI ===
         return HoaDonUpdateMapper.INSTANCE.toResponseDTO(hoaDonDaLuu);
     }
@@ -1216,8 +1214,6 @@ public class HoaDonServiceImpl implements HoaDonService {
                 hoaDon.setKhachHang(null); // Gán là khách lẻ nếu ID không hợp lệ
             }
         } else {
-            // Mặc định cho một nhân viên nào đó nếu cần
-            NhanVien nhanVien = nhanVienRepository.findById(8).orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND));
             hoaDon.setKhachHang(null); // Khách lẻ
         }
 
@@ -1247,7 +1243,7 @@ public class HoaDonServiceImpl implements HoaDonService {
                     }
                 } else if (pgg.getSoTienGiam() != null) {
                     // Giảm theo số tiền cố định
-                    soTienDuocGiam = pgg.getGiamToiDa();
+                    soTienDuocGiam = pgg.getSoTienGiam();
                 }
 
                 BigDecimal tongTienCuoiCung = tongTienGocBD.subtract(soTienDuocGiam);
@@ -1409,7 +1405,7 @@ public class HoaDonServiceImpl implements HoaDonService {
                     }
                 } else if (pgg.getSoTienGiam() != null) {
                     // Giảm theo số tiền cố định
-                    soTienDuocGiam = pgg.getGiamToiDa();
+                    soTienDuocGiam = pgg.getSoTienGiam();
                 }
                 BigDecimal tongTienCuoiCung = tongTienGocBD.subtract(soTienDuocGiam);
                 hoaDon.setTongTien(tongTienCuoiCung.intValue());

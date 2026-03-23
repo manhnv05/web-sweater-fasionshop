@@ -35,7 +35,10 @@ public class HoaDonChiTietServiceImpl implements HoaDonChiTietService {
             String anhDauTien = null;
             List<SpctHinhAnh> danhSachHinhAnh = hdct.getSanPhamChiTiet().getSpctHinhAnhs();
             if (danhSachHinhAnh != null && !danhSachHinhAnh.isEmpty()) {
-                anhDauTien = danhSachHinhAnh.get(0).getHinhAnh().getDuongDanAnh();
+                SpctHinhAnh firstHinhAnh = danhSachHinhAnh.get(0);
+                if (firstHinhAnh.getHinhAnh() != null) {
+                    anhDauTien = firstHinhAnh.getHinhAnh().getDuongDanAnh();
+                }
             }
             dto.setDuongDanAnh(anhDauTien);
 

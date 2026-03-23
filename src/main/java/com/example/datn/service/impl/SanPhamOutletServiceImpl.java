@@ -179,7 +179,7 @@ public class SanPhamOutletServiceImpl implements SanPhamOutletService {
             DotGiamGia dot = dgg.getDotGiamGia();
             if (dot.getTrangThai() == 1) { // Giả sử 1 là trạng thái "đang hoạt động"
                 salePrice = dgg.getGiaSauKhiGiam();
-                int percent = (int) Math.round(100.0 * (price - salePrice) / price);
+                    int percent = (price != null && price > 0) ? (int) Math.round(100.0 * (price - salePrice) / price) : 0;
                 discountPercent = percent > 0 ? "-" + percent + "%" : "";
                 break;
             }

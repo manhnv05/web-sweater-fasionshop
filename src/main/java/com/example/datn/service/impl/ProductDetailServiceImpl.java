@@ -114,7 +114,8 @@ public class ProductDetailServiceImpl implements ProductDetailService {
         dto.setMaSanPham(sp.getMaSanPham());
         dto.setMoTa(sp.getMoTa());
         dto.setGia(giaMin);
-        dto.setGia(giaMax);
+        dto.setGiaMin(giaMin);
+        dto.setGiaMax(giaMax);
         // Không set giáTruocKhiGiam/giaSauKhiGiam/phanTramGiamGia tổng thể, FE chỉ lấy theo từng variant để show đúng
         if (outlet.isPresent()) {
             dto.setGiaTruocKhiGiam(outlet.get().getGiaTruocKhiGiam());

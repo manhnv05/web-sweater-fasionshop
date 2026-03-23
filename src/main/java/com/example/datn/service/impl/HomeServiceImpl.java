@@ -68,7 +68,7 @@ public class HomeServiceImpl implements HomeService {
                 DotGiamGia dot = dgg.getDotGiamGia();
                 if (dot.getNgayBatDau().isBefore(now) && dot.getNgayKetThuc().isAfter(now) && dot.getTrangThai() == 1) {
                     salePrice = dgg.getGiaSauKhiGiam();
-                    int percent = (int) Math.round(100.0 * (price - salePrice) / price);
+                    int percent = (price != null && price > 0) ? (int) Math.round(100.0 * (price - salePrice) / price) : 0;
                     discountPercent = percent > 0 ? "-" + percent + "%" : "";
                     break;
                 }

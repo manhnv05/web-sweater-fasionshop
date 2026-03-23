@@ -78,7 +78,7 @@ public class ShopServiceImpl implements ShopService {
                 DotGiamGia dot = dgg.getDotGiamGia();
                 if (dot.getTrangThai() == 1) {
                     salePrice = dgg.getGiaSauKhiGiam();
-                    int percent = (int) Math.round(100.0 * (price - salePrice) / price);
+                    int percent = (price != null && price > 0) ? (int) Math.round(100.0 * (price - salePrice) / price) : 0;
                     discountPercent = percent > 0 ? "-" + percent + "%" : "";
                     break;
                 }
